@@ -1,0 +1,156 @@
+"use client";
+import SectionWrapper from "@/shared/components/shared/SectionWrapper";
+import { Button } from "@/shared/components/ui/button";
+import { Field, FieldError, FieldGroup, FieldLabel, FieldSet } from "@/shared/components/ui/field";
+import { Input } from "@/shared/components/ui/input";
+import { getErrorMessage } from "@/shared/utils/get-error-message";
+import { useEffect, useState } from "react";
+
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { stkPushSchema } from "../stkPush.schema";
+import { RequestStatus } from "../components/RequestStatus";
+import { StkFormData } from "../stkPush.schema";
+import { toast } from "sonner";
+import type { StatusType } from "../StatusTypes";
+import { initiateStkPush } from "../payments.api";
+import { usePollTransactionStatus } from "../usePollTransactionStatus";
+
+type TransactionType = "stkPush" | "paybill" | "till";
+
+/** Normalizes 07XX/01XX to Daraja's required 2547XX/2541XX format. */
+function normalizeMsisdn(phone: string): string {
+  if (phone.startsWith("0")) return `254${phone.slice(1)}`;
+  return phone;
+}
+
+const StkPushSection = () => {
+  const [transactionType, setTransactionType] = useState<TransactionType>("stkPush");
+  const [status, setStatus] = useState<StatusType>("idle");
+  const [message, setMessage] = useState("");
+  const [activeTransactionId, setActiveTransactionId] = useState<string | null>(null);
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<StkFormData>({
+    resolver: zodResolver(stkPushSchema),
+  });
+
+  const { data: polledTransaction } = usePollTransactionStatus(activeTransactionId);
+
+  useEffect(() => {
+    if (!polledTransaction) return;
+
+    if (polledTransaction.status === "SETTLED") {
+      setStatus("success");
+      setMessage("Payment successful!");
+      setActiveTransactionId(null);
+    } else if (polledTransaction.status === "FAILED" || polledTransaction.status === "REVERSED") {
+      setStatus("failed");
+      setMessage(polledTransaction.failureReason ?? "Transaction failed");
+      setActiveTransactionId(null);
+    } else {
+      setStatus("pending");
+    }
+  }, [polledTransaction]);
+
+  const handleStkPush = async (data: StkFormData) => {
+    setStatus("pending");
+    setMessage("Sending STK push request...");
+
+    try {
+      const amountKes = Number(data.amount);
+      const response = await initiateStkPush({
+        msisdn: normalizeMsisdn(data.phone),
+        amountMinorUnits: Math.round(amountKes * 100),
+        accountReference: (data.accountNumber ?? "ScriptPay").slice(0, 12),
+        transactionDesc: "Payment".slice(0, 13),
+        // Determines which Daraja PIN prompt Safaricom shows the customer —
+        // pay-bill style vs buy-goods style. The tenant's actual Paybill/Till
+        // NUMBER isn't sent here at all; the backend looks that up from the
+        // tenant's own configured shortcode, never from this form.
+        channel: transactionType === "paybill" ? "PAYBILL" : transactionType === "till" ? "TILL" : undefined,
+      });
+
+      setActiveTransactionId(response.transactionId);
+      setMessage("Awaiting confirmation...");
+      const waitingTimeout = setTimeout(() => {
+        setMessage("Still waiting... please enter your M-Pesa PIN on your phone.");
+      }, 10000);
+      void waitingTimeout;
+
+      reset();
+    } catch (error) {
+      const msg = getErrorMessage(error);
+      setMessage(msg);
+      setStatus("failed");
+      toast.error(msg);
+    }
+  };
+
+  return (
+    <SectionWrapper className="flex flex-col md:flex-row justify-between  ">
+      <div className="flex flex-col justify-start rounded-xl border bg-card p-6 shadow-sm">
+        <h1>Initiate Payment</h1>
+        <p>Send a payment prompt to collect from a customer</p>
+
+        <div className="flex gap-2 my-4">
+          {["stkPush", "paybill", "till"].map((type) => (
+            <Button
+              key={type}
+              type="button"
+              onClick={() => setTransactionType(type as TransactionType)}
+              className={` ${transactionType === type ? "bg-white border text-primary" : "bg-primary"}`}
+            >
+              {type}
+            </Button>
+          ))}
+        </div>
+
+        <form onSubmit={handleSubmit(handleStkPush)} className="max-w-full">
+          <FieldSet>
+            <FieldGroup className="gap-3">
+              <Field>
+                <FieldLabel htmlFor="phone">Phone Number</FieldLabel>
+                <Input id="phone" type="tel" placeholder="0700000000" {...register("phone", { required: true })} />
+                {errors.phone && <FieldError>{errors.phone.message}</FieldError>}
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="amount">Amount</FieldLabel>
+                <Input
+                  id="amount"
+                  type="number"
+                  placeholder="Enter amount"
+                  {...register("amount", { required: true })}
+                />
+                {errors.amount && <FieldError>{errors.amount.message}</FieldError>}
+              </Field>
+
+              {/* Only Paybill payments typically carry an account reference —
+                  Till (buy goods) payments generally don't need one. */}
+              {transactionType === "paybill" && (
+                <Field>
+                  <FieldLabel htmlFor="accountNumber">Account Number</FieldLabel>
+                  <Input
+                    id="accountNumber"
+                    type="text"
+                    placeholder="Enter account number"
+                    {...register("accountNumber", { required: true })}
+                  />
+                  {errors.accountNumber && <FieldError>{errors.accountNumber.message}</FieldError>}
+                </Field>
+              )}
+            </FieldGroup>
+
+            <Button type="submit">Send Prompt</Button>
+          </FieldSet>
+          {message && <div className="text-sm p-3 rounded bg-gray-100">{message}</div>}
+        </form>
+      </div>
+      <RequestStatus status={status} />
+    </SectionWrapper>
+  );
+};
+export default StkPushSection;

@@ -1,0 +1,127 @@
+import * as Sentry from "@sentry/nextjs";
+import { clientConfig } from "@/config/client";
+import axios, { AxiosError, AxiosResponse, InternalAxiosRequestConfig } from "axios";
+import { authBreadcrumbs } from "./sentry/sentry-breadcrumbs";
+
+let accessToken: string | null = null;
+
+export const setAccessToken = (token: string | null) => {
+  accessToken = token;
+};
+export const getAccessToken = () => accessToken;
+
+let isRefreshing = false;
+let refreshQueue: (() => void)[] = [];
+
+const api = axios.create({
+  baseURL: "",
+  //   clientConfig.api.apiUrl,
+
+  withCredentials: true,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+export const apiPrivate = axios.create({
+  baseURL: clientConfig.api.apiUrl,
+  withCredentials: true,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+// Request interceptor
+const requestInterceptor = (config: InternalAxiosRequestConfig): InternalAxiosRequestConfig => {
+  if (config.headers && accessToken) {
+    config.headers.Authorization = `Bearer ${accessToken}`;
+  }
+  return config;
+};
+
+// Response interceptor
+const responseInterceptor = (response: AxiosResponse): AxiosResponse => response;
+
+const responseInterceptorError = async (error: AxiosError) => {
+  /* SENTRY CODE STARTS */
+  const status = error.response?.status;
+  const url = error.config?.url;
+  const method = error.config?.method;
+  const shouldIgnore = status === 401 || status === 403;
+
+  if (!shouldIgnore) {
+    Sentry.captureException(error, {
+      tags: {
+        type: "api-error",
+        endpoint: url,
+        method,
+      },
+      extra: {
+        status,
+        data: error.response?.data,
+      },
+    });
+  }
+  /* SENTRY CODE ENDS */
+  const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+  // if no response, network error
+  if (!error.response) {
+    return Promise.reject(error);
+  }
+  // if not 401, reject
+  if (error.response.status !== 401) {
+    return Promise.reject(error);
+  }
+  // prevent infinite loop
+  if (originalRequest._retry) {
+    return Promise.reject(error);
+  }
+  // do not refresh on refresh endpoint itself
+  if (originalRequest.url?.includes("/api/auth/refresh")) {
+    return Promise.reject(error);
+  }
+
+  originalRequest._retry = true;
+  // if already refreshing, queue request
+  if (isRefreshing) {
+    return new Promise((resolve) => {
+      refreshQueue.push(() => resolve(api(originalRequest)));
+    });
+  }
+  isRefreshing = true;
+
+  try {
+    // call refresh endpoint
+    authBreadcrumbs("Token refresh started");
+    const res = await apiPrivate.post("/auth/refresh", {});
+    // Every backend response is wrapped as { success, message, statusCode, payload }
+    // (see ResponseTransformInterceptor on the backend) — read through .payload,
+    // not the bare response body.
+    const newAccessToken = res.data.payload?.accessToken ?? null;
+    authBreadcrumbs("Token refresh successful");
+    // save new token
+    setAccessToken(newAccessToken);
+    // retry all queued requests
+    refreshQueue.forEach((cb) => cb());
+    refreshQueue = [];
+    // retry original request — MUST return this: without it, the promise this
+    // interceptor returns resolves to undefined instead of the retried response,
+    // and the original caller's `await api.get(...)` would silently get `undefined`.
+    return api(originalRequest);
+  } catch (refreshError) {
+    // refresh failed logout scenario
+    authBreadcrumbs("Token refresh failed", {
+      error: String(refreshError),
+    });
+    setAccessToken(null);
+    refreshQueue = [];
+    return Promise.reject(refreshError);
+  } finally {
+    isRefreshing = false;
+  }
+};
+
+api.interceptors.request.use(requestInterceptor, (error) => Promise.reject(error));
+api.interceptors.response.use(responseInterceptor, responseInterceptorError);
+
+export default api;

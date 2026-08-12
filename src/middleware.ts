@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { jwtVerify } from "jose";
-
+import { InternalAxiosRequestConfig } from "axios";
 /**
  * This file did not exist at all before — every route protection check in this
  * codebase was `"use client"` (ProtectedLayout, admin/layout.tsx), meaning:
@@ -31,6 +31,16 @@ import { jwtVerify } from "jose";
 
 const PROTECTED_PREFIXES = ["/admin", "/dashboard", "/payments", "/transactions", "/api-keys", "/settings"];
 const ADMIN_ONLY_PREFIXES = ["/admin"];
+// Middleware to inject CSRF token
+const csrfInterceptor = (config: InternalAxiosRequestConfig) => {
+  const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content");
+  if (token && config.method !== "get") {
+    config.headers["X-CSRF-Token"] = token;
+  }
+  return config;
+};
+
+// api.interceptors.request.use(csrfInterceptor);
 
 async function verifyAccessToken(token: string): Promise<{ role: string } | null> {
   try {
@@ -81,5 +91,12 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/dashboard/:path*", "/payments/:path*", "/transactions/:path*", "/api-keys/:path*", "/settings/:path*"],
+  matcher: [
+    "/admin/:path*",
+    "/dashboard/:path*",
+    "/payments/:path*",
+    "/transactions/:path*",
+    "/api-keys/:path*",
+    "/settings/:path*",
+  ],
 };

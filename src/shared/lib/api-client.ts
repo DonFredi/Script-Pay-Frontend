@@ -3,6 +3,13 @@ import { clientConfig } from "@/config/client";
 import axios, { AxiosError, AxiosResponse, InternalAxiosRequestConfig } from "axios";
 import { authBreadcrumbs } from "./sentry/sentry-breadcrumbs";
 
+interface BackendErrorBody {
+  success: false;
+  message: string;
+  statusCode: number;
+  error?: { details?: unknown };
+}
+
 let accessToken: string | null = null;
 
 export const setAccessToken = (token: string | null) => {
@@ -70,7 +77,7 @@ function getCsrfTokenFromCookie(): string | null {
 // Response interceptor
 const responseInterceptor = (response: AxiosResponse): AxiosResponse => response;
 
-const responseInterceptorError = async (error: AxiosError) => {
+const responseInterceptorError = async (error: AxiosError<BackendErrorBody>) => {
   /* SENTRY CODE STARTS */
   const status = error.response?.status;
   const url = error.config?.url;

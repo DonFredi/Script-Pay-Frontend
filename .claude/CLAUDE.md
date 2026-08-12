@@ -19,14 +19,14 @@ This file helps Claude understand the ScriptPay project structure and how to bes
 - `@nestjs/core` - NestJS framework
 - `@nestjs/typeorm` - Database ORM (using Prisma) -`@supabase` - Database (postgress)
 - `passport` - Authentication
-- `stripe` - Payment processing
+- `@daraja` - Payment processing
 - `@nestjs/swagger` - API documentation
 
 ### Frontend Stack
 
 - `next.js` - React framework
 - `react` - UI library
-- `@stripe/react-stripe-js` - Stripe integration
+- `@daraja` - daraja integration
 - `tailwindcss` - Styling
 - `swr` - Data fetching
 

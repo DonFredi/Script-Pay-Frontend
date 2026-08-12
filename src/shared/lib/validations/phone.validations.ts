@@ -17,7 +17,7 @@ export const InitiateStkPushSchema = z.object({
   accountReference: z.string().min(1).max(20),
   transactionDesc: z.string().min(1).max(50),
   channel: z.enum(['TILL', 'PAYBILL']),
-  metadata: z.record(z.any()).optional(),
+  metadata:z.record(z.string(), z.any()).optional(),
 });
 
 export type InitiateStkPushDto = z.infer<typeof InitiateStkPushSchema>;

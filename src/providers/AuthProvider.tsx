@@ -71,7 +71,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Relies on the httpOnly refresh_token cookie sent automatically via
         // withCredentials — if there's no valid session, this simply returns
         // { accessToken: null } (see backend AuthController.refresh), not an error.
-        const res = await apiPrivate.post("/api/auth/refresh", {});
+        const res = await apiPrivate.post("/auth/refresh", {});
         const accessToken: string | null = res.data?.payload?.accessToken ?? null;
 
         if (!accessToken) {

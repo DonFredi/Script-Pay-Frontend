@@ -10,6 +10,36 @@ interface BackendErrorBody {
   error?: { details?: unknown };
 }
 
+/**
+ * Sentry must never receive the raw error response body. Our backend's validation
+ * errors can include field-level details (e.g. Zod's flatten() output) for a payment
+ * request — and payment requests carry msisdn (a real phone number) and amount, both
+ * PII/financial data for a Kenyan M-Pesa platform. Rather than sending `data` as-is,
+ * this whitelists exactly what's safe: the generic message, the status code, and
+ * WHICH fields failed validation (field names only — never the submitted values).
+ */
+function scrubErrorDataForSentry(data: unknown): Record<string, unknown> {
+  if (!data || typeof data !== "object") return {};
+
+  const body = data as Partial<BackendErrorBody>;
+  const scrubbed: Record<string, unknown> = {
+    message: typeof body.message === "string" ? body.message : undefined,
+    statusCode: typeof body.statusCode === "number" ? body.statusCode : undefined,
+  };
+
+  const details = body.error?.details;
+  if (details && typeof details === "object" && "fieldErrors" in details) {
+    const fieldErrors = (details as { fieldErrors?: Record<string, unknown> }).fieldErrors;
+    if (fieldErrors && typeof fieldErrors === "object") {
+      // Field NAMES only (e.g. "msisdn", "amountMinorUnits") — never the values
+      // that were actually submitted for them.
+      scrubbed.invalidFields = Object.keys(fieldErrors);
+    }
+  }
+
+  return scrubbed;
+}
+
 let accessToken: string | null = null;
 
 export const setAccessToken = (token: string | null) => {
@@ -93,17 +123,17 @@ const responseInterceptorError = async (error: AxiosError<BackendErrorBody>) => 
       },
       extra: {
         status,
-        data: error.response?.data,
+        data: scrubErrorDataForSentry(error.response?.data),
       },
     });
   }
   /* SENTRY CODE ENDS */
 
-  // ← ADD THIS SECTION: CSRF Token Errors
-  // If we get a 403 and the error mentions CSRF, log it clearly
+  // If we get a 403 and the error mentions CSRF, log it clearly.
+  // Breadcrumb also uses the scrubbed body — same reasoning as above.
   if (status === 403 && error.response?.data?.message?.includes("CSRF")) {
     Sentry.captureMessage("CSRF token validation failed", "error");
-    authBreadcrumbs("CSRF token validation failed", { error: error.response.data });
+    authBreadcrumbs("CSRF token validation failed", { error: scrubErrorDataForSentry(error.response.data) });
   }
 
   const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };

@@ -5,7 +5,7 @@ import { ApiResponse } from "@/shared/types";
 import type { RegisterDto } from "./register.types";
 
 export const register = async (data: RegisterInput): Promise<RegisterDto> => {
-  const response = await api.post<ApiResponse<RegisterDto>>("/api/auth/signup", data);
+  const response = await api.post<ApiResponse<RegisterDto>>("/auth/signup", data);
   if (!response.data.success) throw new ApiCustomError(response.data.message, response.data.statusCode);
   return response.data.payload;
 };

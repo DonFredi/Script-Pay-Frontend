@@ -51,7 +51,9 @@ let isRefreshing = false;
 let refreshQueue: (() => void)[] = [];
 
 const api = axios.create({
-  baseURL: clientConfig.api.apiUrl, // ← FIX: was empty string, now uses config
+  // Resolves to a same-origin proxy path in the browser, an absolute URL on the
+  // server — see the comment on clientConfig.api.apiUrl for why that split matters.
+  baseURL: clientConfig.api.apiUrl,
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",

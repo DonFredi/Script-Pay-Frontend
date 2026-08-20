@@ -31,7 +31,8 @@ export default function RegisterForm() {
       await mutateAsync(data);
       reset();
       router.replace(`/auth/verify-email?email=${data.email}`);
-    } catch (err) {
+    } catch {
+      // Error already surfaces via useRegister's own error/toast handling.
     }
   };
 

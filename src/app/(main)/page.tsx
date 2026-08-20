@@ -1,15 +1,7 @@
 "use client";
-import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
 import HomePage from "@/modules/home/HomePage";
-import PageWrapper from "@/shared/components/shared/PageWrapper";
-import SectionWrapper from "@/shared/components/shared/SectionWrapper";
-import { Button } from "@/shared/components/ui/button";
-import { H4, H5, P } from "@/shared/components/ui/Typography";
-import { useRouter } from "next/navigation";
 
 export default function Home() {
-  const router = useRouter();
-  const { user } = useAuth();
   return (
     <div>
       {/* <SectionWrapper className="flex items-center gap-5">

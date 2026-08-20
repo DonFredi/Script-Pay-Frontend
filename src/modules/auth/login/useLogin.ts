@@ -1,6 +1,6 @@
 "use client";
 import { useMutation } from "@tanstack/react-query";
-import type { LoginInput } from "./login.schema";
+import  { LoginInput } from "./login.schema";
 import { login } from "./login.api";
 import { useAuthContext } from "@/providers/AuthProvider";
 import { toast } from "sonner";
@@ -11,7 +11,7 @@ export const useLogin = () => {
   const { setSession } = useAuthContext();
 
   return useMutation({
-    mutationFn: login,
+    mutationFn:  (data: LoginInput) => login(data),
     onMutate: () => {
       authBreadcrumbs("Login attempt started");
     },

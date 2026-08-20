@@ -37,7 +37,8 @@ export default function ForgotPasswordForm() {
     try {
       await mutateAsync(data);
       reset();
-    } catch (err) {
+    } catch {
+      // Error already surfaces via `error` from useForgotPassword, rendered below.
     }
   };
 
@@ -49,7 +50,7 @@ export default function ForgotPasswordForm() {
             <PageHeading>Forgot Password</PageHeading>
           </FieldLegend>
           <FieldDescription className="text-center">
-            Enter your email address and we'll send you a link to reset your password.
+            Enter your email address and we&apos;ll send you a link to reset your password.
           </FieldDescription>
           <Activity mode={error ? "visible" : "hidden"}>
             <FormError>{getErrorMessage(error)}</FormError>

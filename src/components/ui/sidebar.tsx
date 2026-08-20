@@ -565,9 +565,16 @@ function SidebarMenuSkeleton({
 }: React.ComponentProps<"div"> & {
   showIcon?: boolean;
 }) {
-  // Random width between 50 to 90%.
-  const width = React.useMemo(() => {
-    return `${Math.floor(Math.random() * 40) + 50}%`;
+  // Random width between 50 to 90%. Deferred to a client-only effect — computing
+  // it directly during render diverges between the server-rendered and
+  // hydrated-client markup (each gets a different random value), which React
+  // flags as a hydration mismatch. The resulting extra render is intentional
+  // here (randomize-after-mount is the standard fix for this class of bug),
+  // so the set-state-in-effect rule is deliberately suppressed for this line.
+  const [width, setWidth] = React.useState("70%");
+  React.useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setWidth(`${Math.floor(Math.random() * 40) + 50}%`);
   }, []);
 
   return (

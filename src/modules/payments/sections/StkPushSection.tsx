@@ -4,7 +4,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Field, FieldError, FieldGroup, FieldLabel, FieldSet } from "@/shared/components/ui/field";
 import { Input } from "@/shared/components/ui/input";
 import { getErrorMessage } from "@/shared/utils/get-error-message";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -40,21 +40,27 @@ const StkPushSection = () => {
 
   const { data: polledTransaction } = usePollTransactionStatus(activeTransactionId);
 
-  useEffect(() => {
-    if (!polledTransaction) return;
+  // Adjusted directly during render (React's recommended alternative to an
+  // Effect here) rather than via useEffect+setState, so a new poll result
+  // lands in the same commit instead of triggering an extra render pass.
+  const [prevPolledTransaction, setPrevPolledTransaction] = useState(polledTransaction);
+  if (polledTransaction !== prevPolledTransaction) {
+    setPrevPolledTransaction(polledTransaction);
 
-    if (polledTransaction.status === "SETTLED") {
-      setStatus("success");
-      setMessage("Payment successful!");
-      setActiveTransactionId(null);
-    } else if (polledTransaction.status === "FAILED" || polledTransaction.status === "REVERSED") {
-      setStatus("failed");
-      setMessage(polledTransaction.failureReason ?? "Transaction failed");
-      setActiveTransactionId(null);
-    } else {
-      setStatus("pending");
+    if (polledTransaction) {
+      if (polledTransaction.status === "SETTLED") {
+        setStatus("success");
+        setMessage("Payment successful!");
+        setActiveTransactionId(null);
+      } else if (polledTransaction.status === "FAILED" || polledTransaction.status === "REVERSED") {
+        setStatus("failed");
+        setMessage(polledTransaction.failureReason ?? "Transaction failed");
+        setActiveTransactionId(null);
+      } else {
+        setStatus("pending");
+      }
     }
-  }, [polledTransaction]);
+  }
 
   const handleStkPush = async (data: StkFormData) => {
     setStatus("pending");

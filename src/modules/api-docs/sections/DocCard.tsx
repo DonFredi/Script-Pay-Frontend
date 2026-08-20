@@ -7,7 +7,7 @@ const DocCard = () => {
       <section className="mt-6">
         <h2>STK Push</h2>
 
-        <p className="text-gray-600 mt-2">Initiate payment request to customer's phone.</p>
+        <p className="text-gray-600 mt-2">Initiate payment request to customer&apos;s phone.</p>
 
         <div className="bg-gray-100 p-3 rounded mt-2 text-sm">POST /transactions</div>
 

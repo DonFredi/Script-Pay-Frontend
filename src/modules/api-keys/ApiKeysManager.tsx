@@ -50,10 +50,10 @@ export function ApiKeysManager() {
     <div className="space-y-6">
       {justCreatedKey && (
         <div className="rounded-md border border-amber-300 bg-amber-50 p-4 text-sm">
-          <p className="font-medium text-amber-900">Copy this key now — it won't be shown again</p>
+          <p className="font-medium text-amber-900">Copy this key now — it won&apos;t be shown again</p>
           <code className="mt-2 block break-all rounded bg-white p-2 text-xs">{justCreatedKey}</code>
           <button onClick={() => setJustCreatedKey(null)} className="mt-2 text-xs text-muted-foreground underline">
-            I've copied it
+            I&apos;ve copied it
           </button>
         </div>
       )}

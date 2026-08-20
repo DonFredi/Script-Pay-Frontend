@@ -16,12 +16,7 @@ export default function VerifyEmailUI() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { mutateAsync, isPending, isError, isSuccess } = useVerifyEmail();
-  const {
-    mutateAsync: resendEmail,
-    isPending: isResending,
-    isError: errorResending,
-    isSuccess: successResending,
-  } = useResendVerification();
+  const { mutateAsync: resendEmail, isPending: isResending } = useResendVerification();
   const token = searchParams.get("token");
   const email = searchParams.get("email");
   const handleVerifyEmail = async (token: string) => {
@@ -67,7 +62,7 @@ export default function VerifyEmailUI() {
         <span className="">Back to login</span>
       </Link>
       <div className="w-full border-t border-border pt-5 max-w-125 flex items-center mt-2 flex-col gap-2">
-        <small className="text-sm text-muted-foreground">Didn't receive the email? check your spam folder</small>
+        <small className="text-sm text-muted-foreground">Didn&apos;t receive the email? check your spam folder</small>
         <Button
           onClick={() => handleResendVerification()}
           disabled={isResending}

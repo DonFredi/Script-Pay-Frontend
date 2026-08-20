@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Link from "next/link"
 import type { Icon } from "@tabler/icons-react"
 import { IconInnerShadowTop } from "@tabler/icons-react"
 
@@ -41,10 +42,10 @@ export function AppSidebar({ brandLabel, navItems, user, ...props }: AppSidebarP
               asChild
               className="data-[slot=sidebar-menu-button]:p-1.5!"
             >
-              <a href="/">
+              <Link href="/">
                 <IconInnerShadowTop className="size-5!" />
                 <span className="text-base font-semibold">{brandLabel}</span>
-              </a>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

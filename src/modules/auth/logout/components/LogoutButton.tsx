@@ -14,7 +14,7 @@ export default function LogoutButton({ children }: { children: ReactNode }) {
     try {
       await mutateAsync();
       router.push("/");
-    } catch (error) {
+    } catch {
       // logout already surfaces its own error toast via useLogout — this catch only
       // exists so a rejected promise here doesnt become an unhandled rejection.
     }

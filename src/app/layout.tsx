@@ -1,10 +1,7 @@
 import type { Metadata } from "next";
 import { Poppins, Sofia_Sans } from "next/font/google";
-import Header from "@/shared/components/layout/Header";
 import "@/styles/globals.css";
-import Footer from "@/shared/components/layout/Footer";
 import { generateSEO } from "@/shared/lib/seo";
-import { Toaster } from "sonner";
 import QueryProvider from "@/providers/QueryProvider";
 import { AuthProvider } from "@/providers/AuthProvider";
 

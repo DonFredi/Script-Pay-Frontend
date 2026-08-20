@@ -9,7 +9,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 export async function sendContactEmail(formData: ContactFormValues) {
   try {
     const validatedData = contactSchema.parse(formData);
-    const { data, error } = await resend.emails.send({
+    const { error } = await resend.emails.send({
       from: `${siteConfig.name} <onboarding@resend.dev>`,
       to: [siteConfig.contact.email.label],
       subject: "New contact form submission",

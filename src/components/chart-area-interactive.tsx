@@ -144,11 +144,16 @@ export function ChartAreaInteractive() {
   const isMobile = useIsMobile()
   const [timeRange, setTimeRange] = React.useState("90d")
 
-  React.useEffect(() => {
+  // Force the 7d default the moment the viewport crosses into mobile — adjusted
+  // directly during render (React's recommended alternative to an Effect here)
+  // so it lands in the same commit instead of triggering an extra render pass.
+  const [prevIsMobile, setPrevIsMobile] = React.useState(isMobile)
+  if (isMobile !== prevIsMobile) {
+    setPrevIsMobile(isMobile)
     if (isMobile) {
       setTimeRange("7d")
     }
-  }, [isMobile])
+  }
 
   const filteredData = chartData.filter((item) => {
     const date = new Date(item.date)
@@ -260,7 +265,7 @@ export function ChartAreaInteractive() {
               content={
                 <ChartTooltipContent
                   labelFormatter={(value) => {
-                    return new Date(value).toLocaleDateString("en-US", {
+                    return new Date(String(value)).toLocaleDateString("en-US", {
                       month: "short",
                       day: "numeric",
                     })

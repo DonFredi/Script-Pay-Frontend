@@ -48,7 +48,7 @@ export default function ContactForm() {
               <FieldLegend className="">
                 <SectionHeading>Get in touch</SectionHeading>
               </FieldLegend>
-              <FieldDescription>Send us a message and we'll get back to you as soon as possible</FieldDescription>
+              <FieldDescription>Send us a message and we&apos;ll get back to you as soon as possible</FieldDescription>
               {errors.root && <p className="text-lg font-semibold text-red-500">{errors.root.message}</p>}
               <FieldGroup className="gap-3">
                 <Field>

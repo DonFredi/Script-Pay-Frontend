@@ -36,7 +36,8 @@ export default function ResetPasswordForm() {
     try {
       await mutateAsync({ ...data, token });
       reset();
-    } catch (err) {
+    } catch {
+      // Error already surfaces via useResetPassword's own error/toast handling.
     }
   };
 

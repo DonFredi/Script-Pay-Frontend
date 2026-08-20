@@ -11,7 +11,7 @@ export default function ApiKeysPage() {
         <div>
           <PageHeading>API Keys</PageHeading>
           <P className="text-muted-foreground">
-            Use these to authenticate your own systems calling ScriptPay's payment endpoints directly.
+            Use these to authenticate your own systems calling ScriptPay&apos;s payment endpoints directly.
           </P>
         </div>
         <ApiKeysManager />

@@ -18,7 +18,7 @@ Double-submit cookie pattern, matching the backend's `CsrfGuard`: the backend se
 
 ## Same-origin API surface
 
-`next.config.ts` rewrites `/api/auth/*`, `/api/profile*`, and `/v1/*` to the backend, rather than the frontend calling a cross-origin backend URL directly from the browser for these paths. Combined with `withCredentials: true` on both axios instances, this keeps cookies same-site, which is what makes the httpOnly refresh-token cookie usable at all under `sameSite: "lax"`.
+`next.config.ts` rewrites a single catch-all, `/api/backend/:path*`, to the backend, and `clientConfig.api.apiUrl` (`src/config/client.ts`) points axios's `baseURL` at that prefix **only in the browser** (`typeof window !== "undefined"`) — server-side calls use the backend's absolute URL instead, since there's no browser/cookie problem for those. This isn't optional: `access_token`/`refresh_token`/`csrf-token` are cookies set by the backend, and if the browser called the backend's absolute origin directly, those cookies would be scoped to the backend's domain — invisible to this app's `document.cookie` reads and to `middleware.ts` reading incoming request cookies on its own origin. A JSON response body (e.g. a successful login) still comes back fine either way even when this is broken, which is what makes a regression here easy to miss — only the cookie-dependent parts (CSRF, silent refresh, middleware) silently fail. Combined with `withCredentials: true` on both axios instances, this keeps cookies same-site, which is what makes the httpOnly refresh-token cookie usable at all under `sameSite: "lax"`.
 
 ## Sentry data scrubbing
 

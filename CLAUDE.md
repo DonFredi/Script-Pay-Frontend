@@ -118,3 +118,13 @@ scratch.
 - Don't add CSRF logic to `middleware.ts` — the one real CSRF interceptor lives in `src/shared/lib/api-client.ts`; `document` doesn't exist in the Edge runtime.
 - Don't assume a bare `/auth/:path*`-style rewrite reaches the backend directly — Next's filesystem router wins over rewrites for any path that's also a real page; check `next.config.ts` for the actual proxy setup before assuming.
 - Don't treat anything under `.claude/prompts`, `.claude/skills`, or old `docs/*.md` commit history from before 2026-08-20 as still valid — the ORIGINAL versions were deleted that day because they described a nonexistent `scriptpay-agent` CLI and other fictional/hallucinated tooling. A new `docs/` and a new `.claude/skills/add-feature-module.md` were written the same day (see "Further docs" above), verified claim-by-claim against actual source rather than carried over — treat those, plus this file and `README.md`, as current. Keep verifying against actual source before extending any of it further; this repo has already paid for that mistake once.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

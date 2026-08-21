@@ -6,13 +6,13 @@ export const navLinks = [
   // visitor regardless of role (or logged-out at all). "/dashboard" is the
   // generic entry point; middleware + the login flow's own role-based redirect
   // already send SUPER_ADMIN to /admin/dashboard specifically after login.
-  { to: "/dashboard", label: "Dashboard" },
-  { to: "/api-docs", label: "API Docs" },
-  //   { to: "/onboarding", label: "Onboarding" },
-  { to: "/payments", label: "Payments" },
-  { to: "/transactions", label: "Transactions" },
-  //   { to: "/contact", label: "Contact us" },
-  //   { to: "/profile", label: "Profile" },
+  // { to: "/dashboard", label: "Dashboard" },
+  // { to: "/api-docs", label: "API Docs" },
+  // //   { to: "/onboarding", label: "Onboarding" },
+  // { to: "/payments", label: "Payments" },
+  // { to: "/transactions", label: "Transactions" },
+  // //   { to: "/contact", label: "Contact us" },
+  // //   { to: "/profile", label: "Profile" },
 ];
 
 export default function Navbar() {

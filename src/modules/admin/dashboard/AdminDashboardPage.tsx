@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import PageWrapper from "@/shared/components/shared/PageWrapper";
 import SectionWrapper from "@/shared/components/shared/SectionWrapper";
 import PageHeading from "@/shared/components/shared/PageHeading";
@@ -36,7 +37,8 @@ export default function AdminDashboardPage() {
                 <TableHead>Name</TableHead>
                 <TableHead>Shortcode</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead className="text-right">Onboarded</TableHead>
+                <TableHead>Onboarded</TableHead>
+                <TableHead className="text-right"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -45,8 +47,13 @@ export default function AdminDashboardPage() {
                   <TableCell className="font-medium">{tenant.name}</TableCell>
                   <TableCell>{tenant.businessShortcode}</TableCell>
                   <TableCell className="capitalize">{tenant.status.replace("_", " ")}</TableCell>
-                  <TableCell className="text-right text-muted-foreground">
+                  <TableCell className="text-muted-foreground">
                     {new Date(tenant.createdAt).toLocaleDateString("en-KE")}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Link href={`/admin/tenants/${tenant.id}/api-keys`} className="text-xs underline">
+                      API keys
+                    </Link>
                   </TableCell>
                 </TableRow>
               ))}

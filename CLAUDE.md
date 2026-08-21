@@ -85,10 +85,36 @@ Requires a running instance of `Script-Pay-Backend`.
 
 Running `jest` locally on Windows requires the Microsoft Visual C++ Redistributable (a native-addon dependency needs it) — a machine prerequisite, not a project configuration issue. `npx tsc --noEmit` and `npx eslint .` don't have this dependency and always work.
 
+## Further docs
+
+This file and `README.md` are the fast-orientation layer. For depth, see
+`docs/` (regenerated 2026-08-21, verified against source — see "What to
+avoid" below for why that matters here specifically):
+
+- `docs/architecture.md` — request lifecycle (login → cookies → interceptors
+  → middleware), why the same-origin `/api/backend` proxy exists, project
+  structure, environment split, observability.
+- `docs/decisions.md` — ADR log: each entry states the problem, the choice
+  made, and *why the rejected alternative didn't fit* (e.g. why the access
+  token is in-memory not localStorage, why a same-origin proxy instead of
+  calling the backend directly).
+- `docs/security.md` — session/token handling, what gets sent to Sentry
+  (and what's scrubbed), what this app deliberately does not do (all real
+  authorization is the backend's job).
+- `docs/testing.md` — what's actually tested today (one hook, `useAuth`),
+  the Windows Jest prerequisite, and the honest gap list (no `test` script
+  wired into `package.json` yet).
+
+One project-specific skill lives in `.claude/skills/`: `add-feature-module`
+(the `modules/<feature>/` file convention, wiring a new call through
+`api-client.ts` correctly, registering a new protected route in
+`middleware.ts`) — reach for it before adding a new feature area from
+scratch.
+
 ## What to avoid
 
 - Don't invent Stripe/card terminology for this product — it's mobile money (M-Pesa), not card processing.
 - Don't put the access token in `localStorage` — it's deliberately in-memory only.
 - Don't add CSRF logic to `middleware.ts` — the one real CSRF interceptor lives in `src/shared/lib/api-client.ts`; `document` doesn't exist in the Edge runtime.
 - Don't assume a bare `/auth/:path*`-style rewrite reaches the backend directly — Next's filesystem router wins over rewrites for any path that's also a real page; check `next.config.ts` for the actual proxy setup before assuming.
-- Don't treat anything under `.claude/prompts`, `.claude/skills`, or old `docs/*.md` commit history as still valid — those were deleted (2026-08-20) because they described a nonexistent `scriptpay-agent` CLI and other fictional/hallucinated tooling. This file and `README.md` are the current source of truth.
+- Don't treat anything under `.claude/prompts`, `.claude/skills`, or old `docs/*.md` commit history from before 2026-08-20 as still valid — the ORIGINAL versions were deleted that day because they described a nonexistent `scriptpay-agent` CLI and other fictional/hallucinated tooling. A new `docs/` and a new `.claude/skills/add-feature-module.md` were written the same day (see "Further docs" above), verified claim-by-claim against actual source rather than carried over — treat those, plus this file and `README.md`, as current. Keep verifying against actual source before extending any of it further; this repo has already paid for that mistake once.

@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/shared/components/ui/button";
 import { Field, FieldError, FieldGroup, FieldLabel, FieldSet } from "@/shared/components/ui/field";
 import { Input } from "@/shared/components/ui/input";
+import { PasswordInput } from "@/shared/components/ui/password-input";
 import { P } from "@/shared/components/ui/Typography";
 import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
 import { mpesaCredentialsSchema, type MpesaCredentialsFormData } from "../mpesa-credentials.schema";
@@ -63,13 +64,13 @@ export function MpesaCredentialsForm() {
 
           <Field>
             <FieldLabel htmlFor="consumerSecret">Consumer Secret</FieldLabel>
-            <Input id="consumerSecret" type="password" {...register("consumerSecret")} />
+            <PasswordInput id="consumerSecret" {...register("consumerSecret")} />
             {errors.consumerSecret && <FieldError>{errors.consumerSecret.message}</FieldError>}
           </Field>
 
           <Field>
             <FieldLabel htmlFor="passkey">Passkey</FieldLabel>
-            <Input id="passkey" type="password" {...register("passkey")} />
+            <PasswordInput id="passkey" {...register("passkey")} />
             {errors.passkey && <FieldError>{errors.passkey.message}</FieldError>}
           </Field>
         </FieldGroup>

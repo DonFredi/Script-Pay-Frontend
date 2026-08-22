@@ -1,4 +1,5 @@
 "use client";
+import { useRouter } from "next/navigation";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import SectionWrapper from "@/shared/components/shared/SectionWrapper";
 import type Transaction from "@/types";
@@ -7,6 +8,10 @@ import { formatKes } from "@/types";
 interface TransactionsTableProps {
   transactions: Transaction[];
   loading: boolean;
+  // Where a row's detail link points — this table is shared between the tenant's
+  // own /transactions page and the admin oversight /admin/transactions page, and
+  // each needs its own route prefix.
+  detailBasePath?: string;
 }
 
 // Previously formatted a Firestore Timestamp (`.toDate()`) — the backend returns
@@ -28,7 +33,9 @@ const getStatusStyle = (status: Transaction["status"]) => {
   }
 };
 
-const TransactionsTable = ({ transactions, loading }: TransactionsTableProps) => {
+const TransactionsTable = ({ transactions, loading, detailBasePath = "/transactions" }: TransactionsTableProps) => {
+  const router = useRouter();
+
   if (loading) {
     return <div>Loading Transactions...</div>;
   }
@@ -56,7 +63,19 @@ const TransactionsTable = ({ transactions, loading }: TransactionsTableProps) =>
             </TableRow>
           ) : (
             transactions.map((transaction) => (
-              <TableRow key={transaction.id}>
+              <TableRow
+                key={transaction.id}
+                tabIndex={0}
+                role="link"
+                onClick={() => router.push(`${detailBasePath}/${transaction.id}`)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    router.push(`${detailBasePath}/${transaction.id}`);
+                  }
+                }}
+                className="cursor-pointer"
+              >
                 <TableCell className="font-medium">{transaction.id.slice(0, 10)}...</TableCell>
                 <TableCell>{transaction.msisdn}</TableCell>
                 <TableCell>{formatKes(transaction.amountMinorUnits)}</TableCell>

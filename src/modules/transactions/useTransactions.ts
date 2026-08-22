@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { listTransactions } from "./transactions.api";
+import { getTransaction, listTransactions } from "./transactions.api";
 
 interface UseTransactionsProps {
   tenantId?: string; // required for SUPER_ADMIN callers, ignored/unnecessary otherwise
@@ -29,4 +29,12 @@ export const useTransactions = ({ tenantId, status }: UseTransactionsProps = {})
     loading: isLoading,
     error: error ? (error as Error).message : null,
   };
+};
+
+export const useTransaction = (id: string) => {
+  return useQuery({
+    queryKey: ["transactions", id],
+    queryFn: () => getTransaction(id),
+    enabled: !!id,
+  });
 };

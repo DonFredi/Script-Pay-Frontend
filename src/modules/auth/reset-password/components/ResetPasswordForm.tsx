@@ -7,7 +7,7 @@ import { Field, FieldError, FieldGroup, FieldLabel, FieldLegend, FieldSet } from
 import PageHeading from "@/shared/components/shared/PageHeading";
 import { Activity } from "react";
 import FormError from "@/shared/components/shared/FormError";
-import { Input } from "@/shared/components/ui/input";
+import { PasswordInput } from "@/shared/components/ui/password-input";
 import { Button } from "@/shared/components/ui/button";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
@@ -57,9 +57,8 @@ export default function ResetPasswordForm() {
           <FieldGroup className="gap-3">
             <Field>
               <FieldLabel htmlFor="password">New Password</FieldLabel>
-              <Input
+              <PasswordInput
                 id="password"
-                type="password"
                 placeholder="••••••••"
                 {...register("password", { required: true })}
               />
@@ -67,9 +66,8 @@ export default function ResetPasswordForm() {
             </Field>
             <Field>
               <FieldLabel htmlFor="confirmPassword">Confirm Password</FieldLabel>
-              <Input
+              <PasswordInput
                 id="confirmPassword"
-                type="password"
                 placeholder="••••••••"
                 {...register("confirmPassword", { required: true })}
               />

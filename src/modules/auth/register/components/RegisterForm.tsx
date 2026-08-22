@@ -4,6 +4,7 @@ import SectionWrapper from "@/shared/components/shared/SectionWrapper";
 import { Button } from "@/shared/components/ui/button";
 import { Field, FieldError, FieldGroup, FieldLabel, FieldLegend, FieldSet } from "@/shared/components/ui/field";
 import { Input } from "@/shared/components/ui/input";
+import { PasswordInput } from "@/shared/components/ui/password-input";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { RegisterInput, registerSchema } from "../register.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -64,9 +65,8 @@ export default function RegisterForm() {
             </Field>
             <Field>
               <FieldLabel htmlFor="password">Password</FieldLabel>
-              <Input
+              <PasswordInput
                 id="password"
-                type="password"
                 placeholder="••••••••"
                 {...register("password", { required: true })}
               />
@@ -74,9 +74,8 @@ export default function RegisterForm() {
             </Field>
             <Field>
               <FieldLabel htmlFor="confirmPassword">Confirm Password</FieldLabel>
-              <Input
+              <PasswordInput
                 id="confirmPassword"
-                type="password"
                 placeholder="••••••••"
                 {...register("confirmPassword", { required: true })}
               />

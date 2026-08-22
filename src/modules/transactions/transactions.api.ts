@@ -13,3 +13,14 @@ export const listTransactions = async (params?: { status?: string; tenantId?: st
   if (!response.data.success) throw new ApiCustomError(response.data.message, response.data.statusCode);
   return response.data.payload;
 };
+
+/**
+ * Matches GET /v1/transactions/:id. No tenantId param needed — the backend scopes
+ * by the caller's own tenant, or lets it through unscoped for SUPER_ADMIN, so this
+ * one call backs both the tenant's own transaction detail page and the admin one.
+ */
+export const getTransaction = async (id: string): Promise<Transaction> => {
+  const response = await api.get<ApiResponse<Transaction>>(`/v1/transactions/${id}`);
+  if (!response.data.success) throw new ApiCustomError(response.data.message, response.data.statusCode);
+  return response.data.payload;
+};

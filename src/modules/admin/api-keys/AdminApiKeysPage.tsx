@@ -7,26 +7,19 @@ import SectionWrapper from "@/shared/components/shared/SectionWrapper";
 import PageHeading from "@/shared/components/shared/PageHeading";
 import { P } from "@/shared/components/ui/Typography";
 import { useTenants } from "@/modules/admin/useTenants";
-import { useTransactions } from "@/modules/transactions/useTransactions";
-import TransactionsTable from "@/modules/transactions/sections/TransactionsTable";
+import { AdminApiKeysTable } from "./AdminApiKeysTable";
 
 /**
- * Didn't exist before — was one of two admin nav links pointing at a 404
- * (the other being audit-logs). GET /v1/transactions requires SUPER_ADMIN callers
- * to pass ?tenantId= explicitly (enforced server-side), hence the picker below
- * rather than a bare cross-tenant list.
- *
- * The picker's value is mirrored into the URL (?tenantId=) so a tenant's detail
- * page (AdminTenantDetailPage) can deep-link straight into their transactions
- * pre-filtered, instead of landing here and re-picking them from the dropdown.
+ * Top-level nav entry point for API keys. GET /v1/api-keys requires SUPER_ADMIN
+ * callers to pass ?tenantId= explicitly (enforced server-side, no "all tenants"
+ * mode exists) — same constraint AdminTransactionsPage has, so this follows the
+ * same tenant-picker-first pattern rather than a bare list.
  *
  * If nothing was pre-selected via the URL, the first tenant is auto-picked once
- * the tenants list loads — landing on this page previously showed nothing but a
- * "pick a tenant" placeholder even though the picker itself was right there. The
- * ref guards this to run once per mount only, so manually clearing the picker
- * back to "Select a tenant…" isn't fought by the effect re-selecting it.
+ * the tenants list loads, same as AdminTransactionsPage — the ref guards this to
+ * run once per mount so manually clearing the picker isn't fought by the effect.
  */
-export default function AdminTransactionsPage() {
+export default function AdminApiKeysPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: tenants, isLoading: tenantsLoading } = useTenants();
@@ -35,7 +28,7 @@ export default function AdminTransactionsPage() {
 
   function handleTenantChange(tenantId: string) {
     setSelectedTenantId(tenantId);
-    router.replace(tenantId ? `/admin/transactions?tenantId=${tenantId}` : "/admin/transactions");
+    router.replace(tenantId ? `/admin/api-keys?tenantId=${tenantId}` : "/admin/api-keys");
   }
 
   useEffect(() => {
@@ -45,14 +38,12 @@ export default function AdminTransactionsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tenants, selectedTenantId]);
 
-  const { transactions, loading } = useTransactions({ tenantId: selectedTenantId || undefined });
-
   return (
     <PageWrapper>
       <SectionWrapper className="space-y-6">
         <div>
-          <PageHeading>Transactions</PageHeading>
-          <P className="text-muted-foreground">Pick a tenant to view their transaction history.</P>
+          <PageHeading>API Keys</PageHeading>
+          <P className="text-muted-foreground">Pick a tenant to view and manage their API keys.</P>
         </div>
 
         <select
@@ -70,9 +61,9 @@ export default function AdminTransactionsPage() {
         </select>
 
         {selectedTenantId ? (
-          <TransactionsTable transactions={transactions} loading={loading} detailBasePath="/admin/transactions" />
+          <AdminApiKeysTable tenantId={selectedTenantId} />
         ) : (
-          <P className="text-muted-foreground">Select a tenant above to see their transactions.</P>
+          <P className="text-muted-foreground">Select a tenant above to see their API keys.</P>
         )}
       </SectionWrapper>
     </PageWrapper>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import PageWrapper from "@/shared/components/shared/PageWrapper";
 import SectionWrapper from "@/shared/components/shared/SectionWrapper";
 import PageHeading from "@/shared/components/shared/PageHeading";
@@ -14,10 +15,21 @@ import TransactionsTable from "@/modules/transactions/sections/TransactionsTable
  * (the other being audit-logs). GET /v1/transactions requires SUPER_ADMIN callers
  * to pass ?tenantId= explicitly (enforced server-side), hence the picker below
  * rather than a bare cross-tenant list.
+ *
+ * The picker's value is mirrored into the URL (?tenantId=) so a tenant's detail
+ * page (AdminTenantDetailPage) can deep-link straight into their transactions
+ * pre-filtered, instead of landing here and re-picking them from the dropdown.
  */
 export default function AdminTransactionsPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { data: tenants, isLoading: tenantsLoading } = useTenants();
-  const [selectedTenantId, setSelectedTenantId] = useState<string>("");
+  const [selectedTenantId, setSelectedTenantId] = useState<string>(searchParams.get("tenantId") ?? "");
+
+  function handleTenantChange(tenantId: string) {
+    setSelectedTenantId(tenantId);
+    router.replace(tenantId ? `/admin/transactions?tenantId=${tenantId}` : "/admin/transactions");
+  }
 
   const { transactions, loading } = useTransactions({ tenantId: selectedTenantId || undefined });
 
@@ -31,7 +43,7 @@ export default function AdminTransactionsPage() {
 
         <select
           value={selectedTenantId}
-          onChange={(e) => setSelectedTenantId(e.target.value)}
+          onChange={(e) => handleTenantChange(e.target.value)}
           className="rounded-md border border-input bg-background px-3 py-2 text-sm"
           disabled={tenantsLoading}
         >

@@ -19,7 +19,7 @@ that backend: it owns no database and never calls Safaricom directly.
 - **UI**: shadcn/Radix primitives (`src/components/ui`, `src/shared/components/ui`), Tailwind v4
 - **Auth token verification at the edge**: `jose` — the same JWT library the backend uses to sign tokens
 - **Errors/monitoring**: `@sentry/nextjs`
-- **Email** (contact form only): `resend` + `@react-email/*`
+- **Email**: `resend` + `@react-email/*` are in the dependency tree but currently unused — the contact form that called them (`contact/actions/send-contact-email.ts`, `ContactForm.tsx`) was removed 2026-08-21. `src/shared/components/email-template/` still holds the templates as orphaned code.
 - **Payment provider**: Safaricom Daraja, via the backend — no Stripe, no `@stripe/*` dependency
 
 ## Request flow
@@ -42,12 +42,12 @@ Next.js 16 (App Router) — this repo
 ```
 src/
 ├── app/                 App Router pages, route groups: (main)/(public|protected), auth/
-│   ├── (main)/(public)/    marketing, contact, API docs — no auth
+│   ├── (main)/(public)/    marketing homepage + /unauthorized — no auth (contact form and API docs page were removed 2026-08-21)
 │   ├── (main)/(protected)/ everything behind login
 │   │   ├── (client)/          tenant dashboard: payments, transactions, api-keys, settings, profile
-│   │   └── admin/               platform-staff-only: tenants (dashboard), audit logs, transactions
+│   │   └── admin/               platform-staff-only: tenants (dashboard, per-tenant API keys), audit logs, transactions
 │   └── auth/               login, register, forgot/reset password, verify email
-├── modules/              feature code: auth, tenants, onboarding, payments, transactions, api-keys, admin, api-docs, home
+├── modules/              feature code: auth, tenants, onboarding, payments, transactions, api-keys, admin, home
 │   └── <feature>/          *.api.ts (axios calls), *.schema.ts (zod), use*.ts (react-query hooks), components/
 ├── components/           shadcn-derived primitives + admin sidebar/nav shell
 ├── shared/                cross-cutting UI/lib code (api-client, utils, layout, email templates)

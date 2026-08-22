@@ -36,8 +36,8 @@ export function AdminTenantApiKeysPage({ tenantId }: { tenantId: string }) {
     <PageWrapper>
       <SectionWrapper className="space-y-6">
         <div>
-          <Link href="/admin/dashboard" className="text-sm text-muted-foreground underline">
-            ← Tenants
+          <Link href={`/admin/tenants/${tenantId}`} className="text-sm text-muted-foreground underline">
+            ← {tenantName}
           </Link>
           <PageHeading>API keys — {tenantName}</PageHeading>
           <P className="text-muted-foreground">Read-only oversight. Revoke here only for incident response.</P>

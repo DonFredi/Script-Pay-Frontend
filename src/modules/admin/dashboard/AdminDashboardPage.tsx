@@ -44,7 +44,11 @@ export default function AdminDashboardPage() {
             <TableBody>
               {tenants.map((tenant) => (
                 <TableRow key={tenant.id}>
-                  <TableCell className="font-medium">{tenant.name}</TableCell>
+                  <TableCell className="font-medium">
+                    <Link href={`/admin/tenants/${tenant.id}`} className="hover:underline">
+                      {tenant.name}
+                    </Link>
+                  </TableCell>
                   <TableCell>{tenant.businessShortcode}</TableCell>
                   <TableCell className="capitalize">{tenant.status.replace("_", " ")}</TableCell>
                   <TableCell className="text-muted-foreground">

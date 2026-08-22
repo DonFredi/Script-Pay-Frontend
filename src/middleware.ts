@@ -28,7 +28,16 @@ import { jwtVerify } from "jose";
  * page-load-time first line of defense, not the only line of defense.
  */
 
-const PROTECTED_PREFIXES = ["/admin", "/dashboard", "/payments", "/transactions", "/api-keys", "/settings"];
+const PROTECTED_PREFIXES = [
+  "/admin",
+  "/dashboard",
+  "/payments",
+  "/transactions",
+  "/api-keys",
+  "/settings",
+  "/profile",
+  "/onboarding",
+];
 const ADMIN_ONLY_PREFIXES = ["/admin"];
 // NOTE: CSRF token attachment lives in src/shared/lib/api-client.ts (requestInterceptor,
 // reads the csrf-token cookie via document.cookie). This is the only CSRF interceptor —
@@ -91,5 +100,7 @@ export const config = {
     "/transactions/:path*",
     "/api-keys/:path*",
     "/settings/:path*",
+    "/profile/:path*",
+    "/onboarding/:path*",
   ],
 };

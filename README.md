@@ -10,7 +10,7 @@ Safaricom directly.
 ```
 src/
 ├── app/                 App Router pages
-│   ├── (main)/(public)/    marketing, contact, API docs — no auth
+│   ├── (main)/(public)/    marketing homepage + /unauthorized — no auth
 │   ├── (main)/(protected)/ everything behind login
 │   │   ├── (client)/        tenant dashboard: payments, transactions, api-keys, settings, profile
 │   │   └── admin/             platform-staff-only: tenants, audit logs, transactions

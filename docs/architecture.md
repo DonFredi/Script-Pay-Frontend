@@ -124,12 +124,12 @@ duplicate CSRF read there could never have worked.
 ```
 src/
 ├── app/                 App Router pages, route groups: (main)/(public|protected), auth/
-│   ├── (main)/(public)/    marketing, contact, API docs — no auth
+│   ├── (main)/(public)/    marketing homepage + /unauthorized — no auth (contact form and API docs page were removed 2026-08-21)
 │   ├── (main)/(protected)/ everything behind login
 │   │   ├── (client)/          tenant dashboard: payments, transactions, api-keys, settings, profile
-│   │   └── admin/               platform-staff-only: tenants, audit logs, transactions
+│   │   └── admin/               platform-staff-only: tenants (dashboard, per-tenant API keys), audit logs, transactions
 │   └── auth/               login, register, forgot/reset password, verify email
-├── modules/              feature code: auth, tenants, onboarding, payments, transactions, api-keys, admin, api-docs, home
+├── modules/              feature code: auth, tenants, onboarding, payments, transactions, api-keys, admin, home
 │   └── <feature>/          *.api.ts (axios calls), *.schema.ts (zod), use*.ts (react-query hooks), components/
 ├── components/           shadcn-derived primitives + admin sidebar/nav shell
 ├── shared/                cross-cutting UI/lib code (api-client, utils, layout, email templates)

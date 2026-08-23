@@ -14,8 +14,9 @@ const HowItWorks = () => {
     },
     {
       id: 3,
-      title: "Payment confirmed",
-      description: "We receive the callback and update the transaction status",
+      title: "You get notified instantly",
+      description:
+        "A webhook fires the moment Safaricom confirms — and reconciliation catches it even if that webhook doesn't arrive",
     },
   ];
   return (

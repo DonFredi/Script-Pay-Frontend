@@ -1,14 +1,22 @@
 import PageWrapper from "@/shared/components/shared/PageWrapper";
 import HeroSection from "./sections/HeroSection";
-import FeatureCard from "./components/FeatureCard";
+import FeaturesSection from "./sections/FeaturesSection";
 import HowItWorks from "./sections/HowItWorks";
+import SecuritySection from "./sections/SecuritySection";
+import DevelopersSection from "./sections/DevelopersSection";
+import FaqSection from "./sections/FaqSection";
+import CtaSection from "./sections/CtaSection";
 
 const HomePage = () => {
   return (
     <PageWrapper>
       <HeroSection />
-      <FeatureCard />
+      <FeaturesSection />
       <HowItWorks />
+      <SecuritySection />
+      <DevelopersSection />
+      <FaqSection />
+      <CtaSection />
     </PageWrapper>
   );
 };

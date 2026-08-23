@@ -1,44 +1,58 @@
 import Link from "next/link";
+import { ShieldCheck, RefreshCw, Code2 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
-import Shield from "../icons/Shield";
-import Clock from "../icons/Clock";
-import Code from "../icons/Code";
 import SectionWrapper from "@/shared/components/shared/SectionWrapper";
+
+const trustPoints = [
+  { icon: ShieldCheck, label: "Encrypted credentials" },
+  { icon: RefreshCw, label: "Self-reconciling payments" },
+  { icon: Code2, label: "Built on Safaricom Daraja" },
+];
 
 const HeroSection = () => {
   return (
-    <SectionWrapper className="flex flex-col md:flex-row md:items-center gap-8">
-      <div className="w-full md:w-1/2 space-y-4">
-        <span className="inline-block rounded-full bg-secondary px-3 py-1 text-caption-sm">
-          🔔 Built for businesses
-        </span>
-        <h1>Accept M-Pesa payments in seconds</h1>
-        <p className="text-foreground-muted">
-          Powerful, secure and reliable API for STK Push, transaction tracking and real-time callbacks.
-        </p>
-        <div className="flex flex-row gap-4 my-4">
-          <Button asChild>
-            <Link href="/auth/register">Get Started</Link>
-          </Button>
-          <Button variant="secondary" asChild>
-            <a href="#how-it-works">See how it works</a>
-          </Button>
-        </div>
+    <div className="relative overflow-hidden">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-24 left-1/2 -z-10 h-100 w-100 -translate-x-1/2 rounded-full bg-primary/10 blur-3xl"
+      />
+      <SectionWrapper className="flex flex-col md:flex-row md:items-center gap-8 py-12 md:py-16">
+        <div className="w-full md:w-1/2 space-y-5">
+          <span className="inline-block rounded-full bg-secondary px-3 py-1 text-caption-sm">
+            🔔 Built for Kenyan businesses
+          </span>
+          <h1>Accept M-Pesa payments without the integration headache</h1>
+          <p className="text-foreground-muted text-lg">
+            STK Push, Paybill, and Till in one API — with automatic reconciliation, retrying webhooks, and a full
+            audit trail, so you always know where a payment actually stands.
+          </p>
+          <div className="flex flex-row flex-wrap gap-4 my-4">
+            <Button size="lg" asChild>
+              <Link href="/auth/register">Get Started</Link>
+            </Button>
+            <Button size="lg" variant="secondary" asChild>
+              <a href="#how-it-works">See how it works</a>
+            </Button>
+          </div>
 
-        <div className="flex flex-row flex-wrap justify-start gap-6 my-6">
-          <Shield />
-          <Clock />
-          <Code />
+          <div className="flex flex-row flex-wrap justify-start gap-x-6 gap-y-3 pt-2">
+            {trustPoints.map(({ icon: Icon, label }) => (
+              <div key={label} className="flex flex-row items-center gap-2">
+                <Icon size={20} strokeWidth={2} className="text-green-600" />
+                <span className="text-sm text-foreground-muted">{label}</span>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
-      <div className="w-full md:w-1/2">
-        <img
-          src="/images/hero_section_image.png"
-          alt="ScriptPay dashboard preview"
-          className="w-full h-auto rounded-2xl"
-        />
-      </div>
-    </SectionWrapper>
+        <div className="w-full md:w-1/2">
+          <img
+            src="/images/hero_section_image.png"
+            alt="ScriptPay dashboard preview"
+            className="w-full h-auto rounded-2xl shadow-lg"
+          />
+        </div>
+      </SectionWrapper>
+    </div>
   );
 };
 export default HeroSection;

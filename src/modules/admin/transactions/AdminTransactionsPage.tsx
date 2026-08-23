@@ -6,6 +6,7 @@ import PageWrapper from "@/shared/components/shared/PageWrapper";
 import SectionWrapper from "@/shared/components/shared/SectionWrapper";
 import PageHeading from "@/shared/components/shared/PageHeading";
 import { P } from "@/shared/components/ui/Typography";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useTenants } from "@/modules/admin/useTenants";
 import { useTransactions } from "@/modules/transactions/useTransactions";
 import TransactionsTable from "@/modules/transactions/sections/TransactionsTable";
@@ -26,6 +27,10 @@ import TransactionsTable from "@/modules/transactions/sections/TransactionsTable
  * ref guards this to run once per mount only, so manually clearing the picker
  * back to "Select a tenant…" isn't fought by the effect re-selecting it.
  */
+// Radix's Select reserves an empty string for its own internal "no value" state,
+// so the "Select a tenant…" clear option needs a real, non-empty value here.
+const CLEAR_TENANT_VALUE = "__none__";
+
 export default function AdminTransactionsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -34,8 +39,9 @@ export default function AdminTransactionsPage() {
   const hasAutoSelected = useRef(false);
 
   function handleTenantChange(tenantId: string) {
-    setSelectedTenantId(tenantId);
-    router.replace(tenantId ? `/admin/transactions?tenantId=${tenantId}` : "/admin/transactions");
+    const normalized = tenantId === CLEAR_TENANT_VALUE ? "" : tenantId;
+    setSelectedTenantId(normalized);
+    router.replace(normalized ? `/admin/transactions?tenantId=${normalized}` : "/admin/transactions");
   }
 
   useEffect(() => {
@@ -55,19 +61,23 @@ export default function AdminTransactionsPage() {
           <P className="text-muted-foreground">Pick a tenant to view their transaction history.</P>
         </div>
 
-        <select
-          value={selectedTenantId}
-          onChange={(e) => handleTenantChange(e.target.value)}
-          className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+        <Select
+          value={selectedTenantId || CLEAR_TENANT_VALUE}
+          onValueChange={handleTenantChange}
           disabled={tenantsLoading}
         >
-          <option value="">Select a tenant…</option>
-          {tenants?.map((tenant) => (
-            <option key={tenant.id} value={tenant.id}>
-              {tenant.name}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger className="w-64">
+            <SelectValue placeholder="Select a tenant…" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={CLEAR_TENANT_VALUE}>Select a tenant…</SelectItem>
+            {tenants?.map((tenant) => (
+              <SelectItem key={tenant.id} value={tenant.id}>
+                {tenant.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
         {selectedTenantId ? (
           <TransactionsTable transactions={transactions} loading={loading} detailBasePath="/admin/transactions" />

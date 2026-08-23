@@ -1,5 +1,5 @@
 "use client";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import SectionWrapper from "@/shared/components/shared/SectionWrapper";
 import type Transaction from "@/types";
@@ -34,8 +34,6 @@ const getStatusStyle = (status: Transaction["status"]) => {
 };
 
 const TransactionsTable = ({ transactions, loading, detailBasePath = "/transactions" }: TransactionsTableProps) => {
-  const router = useRouter();
-
   if (loading) {
     return <div>Loading Transactions...</div>;
   }
@@ -63,20 +61,15 @@ const TransactionsTable = ({ transactions, loading, detailBasePath = "/transacti
             </TableRow>
           ) : (
             transactions.map((transaction) => (
-              <TableRow
-                key={transaction.id}
-                tabIndex={0}
-                role="link"
-                onClick={() => router.push(`${detailBasePath}/${transaction.id}`)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    router.push(`${detailBasePath}/${transaction.id}`);
-                  }
-                }}
-                className="cursor-pointer"
-              >
-                <TableCell className="font-medium">{transaction.id.slice(0, 10)}...</TableCell>
+              <TableRow key={transaction.id} className="relative">
+                <TableCell className="font-medium">
+                  <Link
+                    href={`${detailBasePath}/${transaction.id}`}
+                    className="rounded-sm after:absolute after:inset-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    {transaction.id.slice(0, 10)}...
+                  </Link>
+                </TableCell>
                 <TableCell>{transaction.msisdn}</TableCell>
                 <TableCell>{formatKes(transaction.amountMinorUnits)}</TableCell>
                 <TableCell>{transaction.mpesaReceiptNumber ?? "—"}</TableCell>

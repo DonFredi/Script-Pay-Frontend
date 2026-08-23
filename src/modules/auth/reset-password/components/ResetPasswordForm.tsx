@@ -46,7 +46,7 @@ export default function ResetPasswordForm() {
 
   return (
     <SectionWrapper className="flex flex-col gap-4 items-center">
-      <form onSubmit={handleSubmit(handleResetPassword)} className="">
+      <form onSubmit={handleSubmit(handleResetPassword)} className="form-narrow">
         <FieldSet className="gap-6">
           <FieldLegend className="mx-auto mb-6">
             <PageHeading>Reset Password</PageHeading>

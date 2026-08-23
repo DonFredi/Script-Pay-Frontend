@@ -44,7 +44,7 @@ export default function ForgotPasswordForm() {
 
   return (
     <SectionWrapper className="flex flex-col gap-6 items-center">
-      <form onSubmit={handleSubmit(handleForgotPassword)} className="">
+      <form onSubmit={handleSubmit(handleForgotPassword)} className="form-narrow">
         <FieldSet className="gap-6">
           <FieldLegend className="mx-auto mb-3">
             <PageHeading>Forgot Password</PageHeading>

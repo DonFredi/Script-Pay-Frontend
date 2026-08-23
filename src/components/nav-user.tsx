@@ -38,7 +38,7 @@ export function NavUser({
     avatar: string
   }
 }) {
-  const { isMobile } = useSidebar()
+  const { isMobile, setOpenMobile } = useSidebar()
   const router = useRouter()
   const { mutateAsync: logout, isPending } = useLogout()
   const initials = user.name
@@ -52,6 +52,10 @@ export function NavUser({
     try {
       await logout();
     } finally {
+      // The dropdown closes itself on item click; on mobile the sidebar it
+      // lives inside is a separate overlay (a Sheet) that wouldn't otherwise
+      // close just because this dropdown did.
+      if (isMobile) setOpenMobile(false);
       router.push("/");
     }
   };

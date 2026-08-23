@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import { Button } from "@/shared/components/ui/button";
 import {
   Sheet,
@@ -9,16 +12,20 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/shared/components/ui/sheet";
-import { navLinks } from "./Navbar";
+import { useNavLinks } from "./useNavLinks";
 import MobileNavLink from "./components/MobileNavLink";
 import { Menu, XIcon } from "lucide-react";
 import { siteConfig } from "@/config/site";
 import Copyright from "@/shared/components/shared/Copyright";
 import Badge from "../../shared/Badge";
+import LogoutButton from "@/modules/auth/logout/components/LogoutButton";
 
 export default function MobileNav() {
+  const [open, setOpen] = useState(false);
+  const navLinks = useNavLinks();
+
   return (
-    <Sheet>
+    <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <Button variant="ghost">
           <Menu className="size-6" />
@@ -48,6 +55,7 @@ export default function MobileNav() {
               </li>
             ))}
           </ul>
+          <LogoutButton onLoggedOut={() => setOpen(false)}>Log Out</LogoutButton>
         </nav>
         <SheetFooter className="text-center p-0">
           <small className="text-green-400">{siteConfig.name}</small>

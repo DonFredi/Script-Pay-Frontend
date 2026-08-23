@@ -39,7 +39,7 @@ export default function RegisterForm() {
 
   return (
     <SectionWrapper className="flex flex-col gap-4 items-center">
-      <form onSubmit={handleSubmit(handleRegister)} className="w-full max-w-82 mx-auto">
+      <form onSubmit={handleSubmit(handleRegister)} className="form-narrow">
         <FieldSet className="gap-6">
           <FieldLegend className="mx-auto mb-8">
             <PageHeading>Create Account</PageHeading>

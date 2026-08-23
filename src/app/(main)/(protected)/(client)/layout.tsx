@@ -6,15 +6,7 @@ import FullScreenLoader from "@/shared/components/layout/FullScreenLoader";
 import { AppSidebar } from "@/components/app-sidebar";
 import { SiteHeader } from "@/components/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { IconCreditCard, IconDashboard, IconHistory, IconKey, IconSettings } from "@tabler/icons-react";
-
-const TENANT_NAV_ITEMS = [
-  { title: "Dashboard", url: "/dashboard", icon: IconDashboard },
-  { title: "Payments", url: "/payments", icon: IconCreditCard },
-  { title: "Transactions", url: "/transactions", icon: IconHistory },
-  { title: "API Keys", url: "/api-keys", icon: IconKey },
-  { title: "Settings", url: "/settings", icon: IconSettings },
-];
+import { TENANT_NAV_ITEMS } from "@/config/nav-items";
 
 // Auth/role gating for everything under here already happens one level up, in
 // (protected)/layout.tsx (the parent ProtectedLayout) — this layout adds the

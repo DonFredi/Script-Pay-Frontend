@@ -10,6 +10,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar"
 
 /**
@@ -27,6 +28,10 @@ export function NavMain({
   }[]
 }) {
   const pathname = usePathname()
+  // On mobile/tablet the sidebar renders as an overlay Sheet (see ui/sidebar.tsx);
+  // without this, navigating leaves that overlay open over the new page — matches
+  // the auto-close behavior the public marketing nav (MobileNav) already has.
+  const { isMobile, setOpenMobile } = useSidebar()
 
   return (
     <SidebarGroup>
@@ -37,7 +42,7 @@ export function NavMain({
             return (
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton asChild tooltip={item.title} isActive={isActive}>
-                  <Link href={item.url}>
+                  <Link href={item.url} onClick={() => isMobile && setOpenMobile(false)}>
                     {item.icon && <item.icon />}
                     <span>{item.title}</span>
                   </Link>

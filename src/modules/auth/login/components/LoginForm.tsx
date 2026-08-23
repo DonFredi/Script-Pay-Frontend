@@ -47,7 +47,7 @@ export default function LoginForm() {
   };
   return (
     <SectionWrapper className="flex flex-col gap-4 items-center">
-      <form onSubmit={handleSubmit(handleLogin)} className="w-full max-w-82 mx-auto">
+      <form onSubmit={handleSubmit(handleLogin)} className="form-narrow">
         <FieldSet className="gap-6">
           <FieldLegend className="mx-auto mb-8">
             <PageHeading>Login</PageHeading>

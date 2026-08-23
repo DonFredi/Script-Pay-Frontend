@@ -7,14 +7,7 @@ import type { ReactNode } from "react";
 import { AppSidebar } from "@/components/app-sidebar";
 import { SiteHeader } from "@/components/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { IconBuildingBank, IconFileText, IconHistory, IconKey } from "@tabler/icons-react";
-
-const ADMIN_NAV_ITEMS = [
-  { title: "Tenants", url: "/admin/dashboard", icon: IconBuildingBank },
-  { title: "API Keys", url: "/admin/api-keys", icon: IconKey },
-  { title: "Transactions", url: "/admin/transactions", icon: IconHistory },
-  { title: "Audit Logs", url: "/admin/audit-logs", icon: IconFileText },
-];
+import { ADMIN_NAV_ITEMS } from "@/config/nav-items";
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const { isAuthenticated, isInitialized, user } = useAuth();

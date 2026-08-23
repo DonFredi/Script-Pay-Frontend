@@ -5,7 +5,10 @@ import { useLogout } from "../useLogout";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../shared/hooks/useAuth";
 
-export default function LogoutButton({ children }: { children: ReactNode }) {
+// onLoggedOut lets a caller react to a successful logout beyond the redirect
+// this component already does itself — e.g. MobileNav closes its sheet with it,
+// since a router.push alone wouldn't dismiss an open Sheet overlay.
+export default function LogoutButton({ children, onLoggedOut }: { children: ReactNode; onLoggedOut?: () => void }) {
   const router = useRouter();
   const { mutateAsync, isPending } = useLogout();
   const { isAuthenticated } = useAuth();
@@ -13,6 +16,7 @@ export default function LogoutButton({ children }: { children: ReactNode }) {
   const handleLogout = async () => {
     try {
       await mutateAsync();
+      onLoggedOut?.();
       router.push("/");
     } catch {
       // logout already surfaces its own error toast via useLogout — this catch only

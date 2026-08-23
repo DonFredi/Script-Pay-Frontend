@@ -1,6 +1,7 @@
 "use client";
 import SectionWrapper from "@/shared/components/shared/SectionWrapper";
 import { Button } from "@/shared/components/ui/button";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Field, FieldError, FieldGroup, FieldLabel, FieldSet } from "@/shared/components/ui/field";
 import { Input } from "@/shared/components/ui/input";
 import { getErrorMessage } from "@/shared/utils/get-error-message";
@@ -17,6 +18,12 @@ import { initiateStkPush } from "../payments.api";
 import { usePollTransactionStatus } from "../usePollTransactionStatus";
 
 type TransactionType = "stkPush" | "paybill" | "till";
+
+const TRANSACTION_TYPE_LABELS: Record<TransactionType, string> = {
+  stkPush: "STK Push",
+  paybill: "Paybill",
+  till: "Till",
+};
 
 /** Normalizes 07XX/01XX to Daraja's required 2547XX/2541XX format. */
 function normalizeMsisdn(phone: string): string {
@@ -102,18 +109,19 @@ const StkPushSection = () => {
         <h1>Initiate Payment</h1>
         <p>Send a payment prompt to collect from a customer</p>
 
-        <div className="flex gap-2 my-4">
-          {["stkPush", "paybill", "till"].map((type) => (
-            <Button
-              key={type}
-              type="button"
-              onClick={() => setTransactionType(type as TransactionType)}
-              className={` ${transactionType === type ? "bg-white border text-primary" : "bg-primary"}`}
-            >
-              {type}
-            </Button>
+        <ToggleGroup
+          type="single"
+          variant="outline"
+          value={transactionType}
+          onValueChange={(value) => value && setTransactionType(value as TransactionType)}
+          className="my-4"
+        >
+          {(Object.keys(TRANSACTION_TYPE_LABELS) as TransactionType[]).map((type) => (
+            <ToggleGroupItem key={type} value={type}>
+              {TRANSACTION_TYPE_LABELS[type]}
+            </ToggleGroupItem>
           ))}
-        </div>
+        </ToggleGroup>
 
         <form onSubmit={handleSubmit(handleStkPush)} className="max-w-full">
           <FieldSet>

@@ -29,7 +29,7 @@ Browser
   │
   ▼
 Next.js 16 (App Router) — this repo
-  ├─ Edge proxy (proxy.ts, formerly middleware.ts — Next.js 16 renamed the convention)  — first-pass route protection
+  ├─ Edge middleware (middleware.ts)  — first-pass route protection. Next.js 16 renamed this convention to `proxy.ts`, but that rename caused a production regression on Vercel (2026-08-23) — reverted, stay on `middleware.ts` until investigated further.
   ├─ Server: SSR/route handlers call the backend's absolute URL directly
   └─ Client: axios (api-client.ts) → same-origin proxy → backend
               │
@@ -53,7 +53,7 @@ src/
 ├── shared/                cross-cutting UI/lib code (api-client, utils, layout, email templates)
 ├── providers/            AuthProvider, QueryProvider
 ├── config/               env schema (client/server split), site config
-└── proxy.ts              Edge-runtime JWT verification for route protection (Next.js 16's renamed middleware.ts convention)
+└── middleware.ts         Edge-runtime JWT verification for route protection
 ```
 
 There is no `apps/`, no `packages/`, no `k8s/`. Real endpoint documentation lives in the backend repo's `CLAUDE.md`/`README.md` — don't duplicate it here.
@@ -64,8 +64,8 @@ Session state is driven entirely by the backend's own JWT/refresh-token pair —
 
 - **Access token**: held in memory only (`setAccessToken`/`getAccessToken` in `api-client.ts`), never `localStorage`. Attached via an axios request interceptor as `Authorization: Bearer`.
 - **Refresh token**: httpOnly cookie, invisible to JS. `api-client.ts`'s response interceptor catches a `401`, calls `/auth/refresh` once (queuing concurrent requests behind the same in-flight refresh), and retries the original request.
-- **CSRF**: the backend sets a non-httpOnly `csrf-token` cookie on login/signup; `api-client.ts` reads it via `document.cookie` and attaches it as `X-CSRF-Token` on POST/PUT/PATCH/DELETE. This is the *only* CSRF interceptor — don't add another one in `proxy.ts`, `document` doesn't exist in the Edge runtime the proxy runs in.
-- **Route protection (`proxy.ts`)**: verifies the `access_token` cookie with `jose` at the Edge — `JWT_ACCESS_SECRET` here **must be byte-for-byte identical** to the backend's own `JWT_ACCESS_SECRET`. If the access token is missing/expired but a `refresh_token` cookie is present, non-admin protected routes are let through (the client-side silent refresh recovers); `/admin/*` routes still redirect without a verified role claim. This is a fast first line of defense, not the authorization boundary — the backend's own guards enforce that on every request regardless.
+- **CSRF**: the backend sets a non-httpOnly `csrf-token` cookie on login/signup; `api-client.ts` reads it via `document.cookie` and attaches it as `X-CSRF-Token` on POST/PUT/PATCH/DELETE. This is the *only* CSRF interceptor — don't add another one in `middleware.ts`, `document` doesn't exist in the Edge runtime middleware runs in.
+- **Route protection (`middleware.ts`)**: verifies the `access_token` cookie with `jose` at the Edge — `JWT_ACCESS_SECRET` here **must be byte-for-byte identical** to the backend's own `JWT_ACCESS_SECRET`. If the access token is missing/expired but a `refresh_token` cookie is present, non-admin protected routes are let through (the client-side silent refresh recovers); `/admin/*` routes still redirect without a verified role claim. This is a fast first line of defense, not the authorization boundary — the backend's own guards enforce that on every request regardless.
 
 ## Environment
 
@@ -108,14 +108,15 @@ avoid" below for why that matters here specifically):
 One project-specific skill lives in `.claude/skills/`: `add-feature-module`
 (the `modules/<feature>/` file convention, wiring a new call through
 `api-client.ts` correctly, registering a new protected route in
-`proxy.ts`) — reach for it before adding a new feature area from
+`middleware.ts`) — reach for it before adding a new feature area from
 scratch.
 
 ## What to avoid
 
 - Don't invent Stripe/card terminology for this product — it's mobile money (M-Pesa), not card processing.
 - Don't put the access token in `localStorage` — it's deliberately in-memory only.
-- Don't add CSRF logic to `proxy.ts` — the one real CSRF interceptor lives in `src/shared/lib/api-client.ts`; `document` doesn't exist in the Edge runtime.
+- Don't add CSRF logic to `middleware.ts` — the one real CSRF interceptor lives in `src/shared/lib/api-client.ts`; `document` doesn't exist in the Edge runtime.
+- Don't rename `middleware.ts` to `proxy.ts` (Next.js 16's newer convention) without first confirming Vercel deploys it correctly — doing so on 2026-08-23 caused protected routes (including plain static ones like `/dashboard`) to start 500ing in production, while working fine in `next dev` and in a local `next build && next start`. Reverted; revisit only with a real repro plan, not as an incidental cleanup.
 - Don't assume a bare `/auth/:path*`-style rewrite reaches the backend directly — Next's filesystem router wins over rewrites for any path that's also a real page; check `next.config.ts` for the actual proxy setup before assuming.
 - Don't treat anything under `.claude/prompts`, `.claude/skills`, or old `docs/*.md` commit history from before 2026-08-20 as still valid — the ORIGINAL versions were deleted that day because they described a nonexistent `scriptpay-agent` CLI and other fictional/hallucinated tooling. A new `docs/` and a new `.claude/skills/add-feature-module.md` were written the same day (see "Further docs" above), verified claim-by-claim against actual source rather than carried over — treat those, plus this file and `README.md`, as current. Keep verifying against actual source before extending any of it further; this repo has already paid for that mistake once.
 

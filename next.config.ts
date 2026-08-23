@@ -14,7 +14,7 @@ const nextConfig: NextConfig = {
       // access_token/refresh_token/csrf-token cookies same-origin: calling the
       // backend's absolute URL directly from the browser instead of through this
       // proxy means those cookies get set on the BACKEND's origin, invisible to
-      // this app's own document.cookie and to middleware.ts.
+      // this app's own document.cookie and to proxy.ts.
       { source: "/api/backend/:path*", destination: `${backendUrl}/:path*` },
     ];
   },

@@ -10,14 +10,12 @@ import {  useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useLogin } from "../useLogin";
-import { useRouter } from "next/navigation";
 import { getErrorMessage } from "@/shared/utils/get-error-message";
 import FormError from "@/shared/components/shared/FormError";
 import { Activity } from "react";
 import { toast } from "sonner";
 
 export default function LoginForm() {
-  const router = useRouter();
   const { mutateAsync, isPending, error } = useLogin();
   const {
     register,
@@ -32,13 +30,10 @@ export default function LoginForm() {
     try {
       // Firebase's ID-token round-trip is gone — this posts straight to the
       // backend, which verifies the password hash itself now.
-      const response = await mutateAsync({ email: data.email, password: data.password });
-
-      // SUPER_ADMIN and everyone else land in different areas — a hardcoded
-      // "/dashboard" would send platform staff into the tenant-scoped area they
-      // don't have access to, bouncing them straight to /unauthorized.
-      const isSuperAdmin = response.user.roles.includes("SUPER_ADMIN");
-      router.replace(isSuperAdmin ? "/admin/dashboard" : "/dashboard");
+      await mutateAsync({ email: data.email, password: data.password });
+      // Post-login redirect lives solely in AuthLayout's own effect (it reacts
+      // to isAuthenticated turning true) — this used to ALSO call
+      // router.replace() here, racing a second navigation off the same login.
       reset();
     } catch (err) {
       toast.error(getErrorMessage(err) || "Incorrect email or password");

@@ -31,7 +31,7 @@ export function AppSidebar({ navItems, userLabel, ...props }: AppSidebarProps) {
 
   return (
     <Sidebar collapsible="offcanvas" {...props}>
-      <SidebarHeader>
+      <SidebarHeader className="p-4">
         <div className="flex items-center justify-between gap-2">
           <Badge />
           {isMobile && (
@@ -42,12 +42,12 @@ export function AppSidebar({ navItems, userLabel, ...props }: AppSidebarProps) {
           )}
         </div>
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent className="px-4">
         <NavMain items={navItems} />
       </SidebarContent>
-      <SidebarFooter className="gap-4">
+      <SidebarFooter className="gap-2 p-4">
         <NavUser label={userLabel} />
-        <div className="px-2 pb-2 text-center">
+        <div className="pb-2 text-center">
           <small className="text-green-400">{siteConfig.name}</small>
           <Copyright />
         </div>

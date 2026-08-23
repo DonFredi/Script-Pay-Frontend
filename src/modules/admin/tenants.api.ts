@@ -22,9 +22,10 @@ export const listTenants = async (): Promise<Tenant[]> => {
 
 /**
  * Matches GET /v1/tenants/:id. No @Roles() guard on the backend route — a
- * TENANT_ADMIN/TENANT_STAFF calling this for their own tenant is also allowed —
- * but this hook is only ever wired up from admin/* pages, which are already
- * SUPER_ADMIN-gated by admin/layout.tsx.
+ * TENANT_ADMIN/TENANT_STAFF calling this for their own tenant is also
+ * allowed, which is exactly why non-admin pages use it too (the client's own
+ * /profile business details, and the shared TransactionDetailPage's receipt
+ * business name) alongside the SUPER_ADMIN-gated admin/* pages.
  */
 export const getTenant = async (id: string): Promise<Tenant> => {
   const response = await api.get<ApiResponse<Tenant>>(`/v1/tenants/${id}`);

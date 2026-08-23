@@ -5,10 +5,11 @@ import PageWrapper from "@/shared/components/shared/PageWrapper";
 import SectionWrapper from "@/shared/components/shared/SectionWrapper";
 import { P } from "@/shared/components/ui/Typography";
 import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
-import { AccountDetailsCard } from "./components/AccountDetailsCard";
-import { BusinessDetailsCard } from "./components/BusinessDetailsCard";
+import { AccountDetailsCard } from "@/modules/profile/components/AccountDetailsCard";
 
-export default function ProfilePage() {
+/** SUPER_ADMIN isn't scoped to a single tenant, so unlike the client's own
+ * /profile there's no business details section here — just the account. */
+export default function AdminProfilePage() {
   const { user } = useAuth();
 
   if (!user) return null;
@@ -18,10 +19,9 @@ export default function ProfilePage() {
       <SectionWrapper className="space-y-6">
         <div>
           <PageHeading>Profile</PageHeading>
-          <P className="text-muted-foreground">Your account and business details.</P>
+          <P className="text-muted-foreground">Your platform admin account details.</P>
         </div>
         <AccountDetailsCard user={user} />
-        {user.tenantId && <BusinessDetailsCard tenantId={user.tenantId} />}
       </SectionWrapper>
     </PageWrapper>
   );

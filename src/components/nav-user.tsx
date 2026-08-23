@@ -14,8 +14,8 @@ export function NavUser({ label }: { label: string }) {
   const { isMobile, setOpenMobile } = useSidebar();
 
   return (
-    <div className="flex flex-col gap-2 px-2 py-1">
-      <p className="truncate px-2 text-sm text-muted-foreground">Signed in as {label}</p>
+    <div className="flex flex-col gap-2">
+      <p className="truncate px-4 text-sm text-muted-foreground">Signed in as {label}</p>
       <LogoutButton onLoggedOut={() => isMobile && setOpenMobile(false)}>Log Out</LogoutButton>
     </div>
   );

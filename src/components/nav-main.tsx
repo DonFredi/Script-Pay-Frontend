@@ -16,7 +16,7 @@ export function NavMain({ items }: { items: NavItem[] }) {
   const { isMobile, setOpenMobile } = useSidebar();
 
   return (
-    <ul className="flex flex-col gap-1 px-2">
+    <ul className="flex flex-col gap-1 divide-y divide-slate-200">
       {items.map((item) => (
         <li key={item.title}>
           <MobileNavLink href={item.url} label={item.title} onClick={() => isMobile && setOpenMobile(false)} />

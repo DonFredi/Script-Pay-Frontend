@@ -4,28 +4,31 @@ const HowItWorks = () => {
   const process = [
     {
       id: 1,
-      title: " 1  Send payment request",
+      title: "Send payment request",
       description: "You initiate a payment using our STK Push API",
     },
     {
       id: 2,
-      title: "2  Customer enters pin",
-      description: "The customer receives the STK prompt and enters pin",
+      title: "Customer enters PIN",
+      description: "The customer receives the STK prompt and enters their M-Pesa PIN",
     },
     {
       id: 3,
-      title: "3  Payment confirmed",
+      title: "Payment confirmed",
       description: "We receive the callback and update the transaction status",
     },
   ];
   return (
-    <SectionWrapper>
-      <h2 className="my-12 text-center">How it works</h2>
-      <div className="flex flex-col md:flex-row justify-between gap-2">
+    <SectionWrapper id="how-it-works" className="py-10">
+      <h2 className="mb-12 text-center">How it works</h2>
+      <div className="flex flex-col md:flex-row justify-between gap-4">
         {process.map((p) => (
-          <div key={p.id} className="py-8 px-3 my-4 bg-white rounded-2xl shadow-lg  ">
-            <h5 className="my-4">{p.title}</h5>
-            <p>{p.description}</p>
+          <div key={p.id} className="flex-1 py-8 px-5 rounded-2xl border bg-card shadow-sm">
+            <div className="mb-3 flex size-8 items-center justify-center rounded-full bg-primary font-semibold text-primary-foreground">
+              {p.id}
+            </div>
+            <h5 className="mb-2">{p.title}</h5>
+            <p className="text-foreground-muted">{p.description}</p>
           </div>
         ))}
       </div>

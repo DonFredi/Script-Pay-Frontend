@@ -10,6 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useTenants } from "@/modules/admin/useTenants";
 import { useTransactions } from "@/modules/transactions/useTransactions";
 import TransactionsTable from "@/modules/transactions/sections/TransactionsTable";
+import { TransactionStatsCards } from "@/modules/transactions/components/TransactionStatsCards";
+import { TransactionVolumeChart } from "@/modules/transactions/components/TransactionVolumeChart";
+import type { TransactionStatus } from "@/types";
 
 /**
  * Didn't exist before — was one of two admin nav links pointing at a 404
@@ -31,11 +34,21 @@ import TransactionsTable from "@/modules/transactions/sections/TransactionsTable
 // so the "Select a tenant…" clear option needs a real, non-empty value here.
 const CLEAR_TENANT_VALUE = "__none__";
 
+const STATUS_FILTERS: { value: TransactionStatus | "ALL"; label: string }[] = [
+  { value: "ALL", label: "All statuses" },
+  { value: "PENDING", label: "Pending" },
+  { value: "PROCESSING", label: "Processing" },
+  { value: "SETTLED", label: "Settled" },
+  { value: "FAILED", label: "Failed" },
+  { value: "REVERSED", label: "Reversed" },
+];
+
 export default function AdminTransactionsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: tenants, isLoading: tenantsLoading } = useTenants();
   const [selectedTenantId, setSelectedTenantId] = useState<string>(searchParams.get("tenantId") ?? "");
+  const [status, setStatus] = useState<TransactionStatus | "ALL">("ALL");
   const hasAutoSelected = useRef(false);
 
   function handleTenantChange(tenantId: string) {
@@ -51,7 +64,15 @@ export default function AdminTransactionsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tenants, selectedTenantId]);
 
-  const { transactions, loading } = useTransactions({ tenantId: selectedTenantId || undefined });
+  // Fetched unfiltered (by tenant only) so the stats/chart reflect the whole
+  // tenant, not just whatever status the table below happens to be filtered to.
+  const { transactions: tenantTransactions, loading: statsLoading } = useTransactions({
+    tenantId: selectedTenantId || undefined,
+  });
+  const { transactions, loading } = useTransactions({
+    tenantId: selectedTenantId || undefined,
+    status: status === "ALL" ? undefined : status,
+  });
 
   return (
     <PageWrapper>
@@ -61,26 +82,45 @@ export default function AdminTransactionsPage() {
           <P className="text-muted-foreground">Pick a tenant to view their transaction history.</P>
         </div>
 
-        <Select
-          value={selectedTenantId || CLEAR_TENANT_VALUE}
-          onValueChange={handleTenantChange}
-          disabled={tenantsLoading}
-        >
-          <SelectTrigger className="w-64">
-            <SelectValue placeholder="Select a tenant…" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={CLEAR_TENANT_VALUE}>Select a tenant…</SelectItem>
-            {tenants?.map((tenant) => (
-              <SelectItem key={tenant.id} value={tenant.id}>
-                {tenant.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+          <Select
+            value={selectedTenantId || CLEAR_TENANT_VALUE}
+            onValueChange={handleTenantChange}
+            disabled={tenantsLoading}
+          >
+            <SelectTrigger className="w-64">
+              <SelectValue placeholder="Select a tenant…" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={CLEAR_TENANT_VALUE}>Select a tenant…</SelectItem>
+              {tenants?.map((tenant) => (
+                <SelectItem key={tenant.id} value={tenant.id}>
+                  {tenant.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={status} onValueChange={(value) => setStatus(value as TransactionStatus | "ALL")}>
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="Filter by status" />
+            </SelectTrigger>
+            <SelectContent>
+              {STATUS_FILTERS.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
         {selectedTenantId ? (
-          <TransactionsTable transactions={transactions} loading={loading} detailBasePath="/admin/transactions" />
+          <>
+            <TransactionStatsCards transactions={tenantTransactions} loading={statsLoading} />
+            {!statsLoading && <TransactionVolumeChart transactions={tenantTransactions} />}
+            <TransactionsTable transactions={transactions} loading={loading} detailBasePath="/admin/transactions" />
+          </>
         ) : (
           <P className="text-muted-foreground">Select a tenant above to see their transactions.</P>
         )}

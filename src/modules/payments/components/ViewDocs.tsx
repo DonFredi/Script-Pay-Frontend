@@ -1,21 +1,21 @@
-"use client";
 import SectionWrapper from "@/shared/components/shared/SectionWrapper";
 import { Button } from "@/shared/components/ui/button";
-import { useRouter } from "next/navigation";
+import { siteConfig } from "@/config/site";
 
+// Used to link to /api-docs — that page was intentionally removed (see
+// CLAUDE.md, 2026-08-21), so this points at a real, staffed contact channel
+// instead of a dead route.
 const ViewDocs = () => {
-  const router = useRouter();
-  const handleDocs = () => {
-    router.push("/api-docs");
-  };
   return (
     <SectionWrapper className="shadow-lg flex flex-row justify-between px-6 py-10 mt-18">
       <div>
         <h4>Need Help?</h4>
-        <p>Check out documentation or contact support</p>
+        <p>Talk to us and we&apos;ll walk you through it</p>
       </div>
 
-      <Button onClick={handleDocs}>View Docs</Button>
+      <Button asChild>
+        <a href={siteConfig.contact.phone.link}>Call Us</a>
+      </Button>
     </SectionWrapper>
   );
 };

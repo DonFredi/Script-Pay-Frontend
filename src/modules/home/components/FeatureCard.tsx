@@ -25,12 +25,19 @@ const FeatureCard = () => {
     },
   ];
   return (
-    <SectionWrapper>
-      <div className="flex flex-col md:flex-row justify-between gap-2 ">
+    <SectionWrapper className="py-10">
+      <div className="mb-6 text-center">
+        <h2>Everything you need to accept payments</h2>
+        <p className="text-foreground-muted">One integration, the whole M-Pesa payment lifecycle.</p>
+      </div>
+      <div className="flex flex-col md:flex-row justify-between gap-4">
         {features.map((feature) => (
-          <div key={feature.id} className="py-12 px-3 my-4 bg-white rounded-2xl shadow-lg ">
-            <h5 className="my-4">{feature.title}</h5>
-            <p>{feature.description}</p>
+          <div
+            key={feature.id}
+            className="flex-1 py-8 px-5 rounded-2xl border bg-card shadow-sm transition-shadow hover:shadow-md"
+          >
+            <h5 className="mb-2">{feature.title}</h5>
+            <p className="text-foreground-muted">{feature.description}</p>
           </div>
         ))}
       </div>

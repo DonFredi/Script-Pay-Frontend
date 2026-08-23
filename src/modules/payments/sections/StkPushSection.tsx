@@ -5,7 +5,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Field, FieldError, FieldGroup, FieldLabel, FieldSet } from "@/shared/components/ui/field";
 import { Input } from "@/shared/components/ui/input";
 import { getErrorMessage } from "@/shared/utils/get-error-message";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -46,6 +46,16 @@ const StkPushSection = () => {
   });
 
   const { data: polledTransaction } = usePollTransactionStatus(activeTransactionId);
+
+  // The success/failure message is only useful for a moment — once the request
+  // has resolved, leaving it on screen indefinitely just clutters the form for
+  // the next payment. Pending/waiting messages are left alone since they're
+  // actively informing the merchant something is still in flight.
+  useEffect(() => {
+    if (status !== "success" && status !== "failed") return;
+    const timeout = setTimeout(() => setMessage(""), 6000);
+    return () => clearTimeout(timeout);
+  }, [status]);
 
   // Adjusted directly during render (React's recommended alternative to an
   // Effect here) rather than via useEffect+setState, so a new poll result
@@ -104,10 +114,10 @@ const StkPushSection = () => {
   };
 
   return (
-    <SectionWrapper className="flex flex-col md:flex-row justify-between  ">
-      <div className="flex flex-col justify-start rounded-xl border bg-card p-6 shadow-sm">
-        <h1>Initiate Payment</h1>
-        <p>Send a payment prompt to collect from a customer</p>
+    <SectionWrapper className="flex flex-col md:flex-row justify-between gap-6">
+      <div className="flex flex-1 flex-col justify-start rounded-xl border bg-card p-6 shadow-sm">
+        <h3>Initiate Payment</h3>
+        <p className="text-muted-foreground">Send a payment prompt to collect from a customer</p>
 
         <ToggleGroup
           type="single"

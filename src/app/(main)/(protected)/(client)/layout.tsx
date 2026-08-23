@@ -35,7 +35,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
       />
       <SidebarInset>
         <SiteHeader />
-        <main className="@container/main flex-1 p-6">{children}</main>
+        <main className="@container/main flex-1 p-6 pt-8">{children}</main>
       </SidebarInset>
     </SidebarProvider>
   );

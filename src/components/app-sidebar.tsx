@@ -4,9 +4,11 @@ import * as React from "react"
 import Link from "next/link"
 import type { Icon } from "@tabler/icons-react"
 import { IconInnerShadowTop } from "@tabler/icons-react"
+import { XIcon } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
 import { NavUser } from "@/components/nav-user"
+import { Button } from "@/components/ui/button"
 import {
   Sidebar,
   SidebarContent,
@@ -15,6 +17,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar"
 
 export interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
@@ -33,20 +36,36 @@ export interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
  * admin/layout.tsx and (client)/layout.tsx with different nav configs.
  */
 export function AppSidebar({ brandLabel, navItems, user, ...props }: AppSidebarProps) {
+  // On mobile the sidebar renders as a Sheet with its default close button
+  // suppressed (see ui/sidebar.tsx) so this can supply one styled to match the
+  // marketing nav's MobileNav — same ghost/XIcon/size-6 close button, in the
+  // same header row as the brand — instead of the two menus looking unrelated.
+  const { isMobile, setOpenMobile } = useSidebar()
+
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
         <SidebarMenu>
-          <SidebarMenuItem>
+          <SidebarMenuItem className="flex items-center justify-between gap-2">
             <SidebarMenuButton
               asChild
-              className="data-[slot=sidebar-menu-button]:p-1.5!"
+              className="w-auto flex-1 data-[slot=sidebar-menu-button]:p-1.5!"
             >
               <Link href="/">
                 <IconInnerShadowTop className="size-5!" />
                 <span className="text-base font-semibold">{brandLabel}</span>
               </Link>
             </SidebarMenuButton>
+            {isMobile && (
+              <Button
+                variant="ghost"
+                className="w-fit shrink-0 translate-x-1/4"
+                onClick={() => setOpenMobile(false)}
+              >
+                <XIcon className="size-6" />
+                <span className="sr-only">Close menu</span>
+              </Button>
+            )}
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>

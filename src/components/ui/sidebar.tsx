@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
-import { PanelLeftIcon } from "lucide-react";
+import { MenuIcon } from "lucide-react";
 import { Slot } from "radix-ui";
 
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -167,7 +167,8 @@ function Sidebar({
           data-sidebar="sidebar"
           data-slot="sidebar"
           data-mobile="true"
-          className="w-(--sidebar-width) bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden"
+          showCloseButton={false}
+          className="w-(--sidebar-width) bg-sidebar p-0 text-sidebar-foreground"
           style={
             {
               "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
@@ -249,7 +250,7 @@ function SidebarTrigger({ className, onClick, ...props }: React.ComponentProps<t
       }}
       {...props}
     >
-      <PanelLeftIcon />
+      <MenuIcon className="size-6" />
       <span className="sr-only">Toggle Sidebar</span>
     </Button>
   );

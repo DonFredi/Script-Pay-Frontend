@@ -28,11 +28,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
 
   return (
     <SidebarProvider style={{ "--sidebar-width": "calc(var(--spacing) * 72)" } as React.CSSProperties}>
-      <AppSidebar
-        brandLabel="ScriptPay"
-        navItems={TENANT_NAV_ITEMS}
-        user={{ name: user?.username ?? user?.email ?? "User", email: user?.email ?? "", avatar: "" }}
-      />
+      <AppSidebar navItems={TENANT_NAV_ITEMS} userLabel={user?.username ?? user?.email ?? "User"} />
       <SidebarInset>
         <SiteHeader />
         <main className="@container/main flex-1 p-6 pt-8">{children}</main>

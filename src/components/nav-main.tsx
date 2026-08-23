@@ -1,57 +1,27 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import type { Icon } from "@tabler/icons-react"
-
-import {
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  useSidebar,
-} from "@/components/ui/sidebar"
+import { useSidebar } from "@/components/ui/sidebar";
+import MobileNavLink from "@/shared/components/layout/nav/components/MobileNavLink";
+import type { NavItem } from "@/config/nav-items";
 
 /**
- * Rewritten: the original block template rendered nav items as inert buttons
- * with no href at all (plus a hardcoded "Quick Create"/mail button that had
- * nothing to do with this product) — nothing here actually navigated anywhere.
+ * Rewritten to reuse the exact same MobileNavLink component the public
+ * marketing nav's mobile sheet uses, instead of the icon-based
+ * SidebarMenuButton list shadcn's dashboard-01 block template used. The
+ * sidebar and the top nav already read from the same TENANT_NAV_ITEMS /
+ * ADMIN_NAV_ITEMS config (see nav-items.ts) — sharing the link component
+ * itself too means they render identically, not just link to the same places.
  */
-export function NavMain({
-  items,
-}: {
-  items: {
-    title: string
-    url: string
-    icon?: Icon
-  }[]
-}) {
-  const pathname = usePathname()
-  // On mobile/tablet the sidebar renders as an overlay Sheet (see ui/sidebar.tsx);
-  // without this, navigating leaves that overlay open over the new page — matches
-  // the auto-close behavior the public marketing nav (MobileNav) already has.
-  const { isMobile, setOpenMobile } = useSidebar()
+export function NavMain({ items }: { items: NavItem[] }) {
+  const { isMobile, setOpenMobile } = useSidebar();
 
   return (
-    <SidebarGroup>
-      <SidebarGroupContent className="flex flex-col gap-2">
-        <SidebarMenu>
-          {items.map((item) => {
-            const isActive = pathname === item.url || pathname.startsWith(`${item.url}/`)
-            return (
-              <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton asChild tooltip={item.title} isActive={isActive}>
-                  <Link href={item.url} onClick={() => isMobile && setOpenMobile(false)}>
-                    {item.icon && <item.icon />}
-                    <span>{item.title}</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            )
-          })}
-        </SidebarMenu>
-      </SidebarGroupContent>
-    </SidebarGroup>
-  )
+    <ul className="flex flex-col gap-1 px-2">
+      {items.map((item) => (
+        <li key={item.title}>
+          <MobileNavLink href={item.url} label={item.title} onClick={() => isMobile && setOpenMobile(false)} />
+        </li>
+      ))}
+    </ul>
+  );
 }

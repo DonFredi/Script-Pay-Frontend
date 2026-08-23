@@ -1,122 +1,22 @@
-"use client"
+"use client";
 
-import { useRouter } from "next/navigation"
-import {
-  IconDotsVertical,
-  IconLogout,
-  IconUserCircle,
-} from "@tabler/icons-react"
+import LogoutButton from "@/modules/auth/logout/components/LogoutButton";
+import { useSidebar } from "@/components/ui/sidebar";
 
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import {
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  useSidebar,
-} from "@/components/ui/sidebar"
-import { useLogout } from "@/modules/auth/logout/useLogout"
-
-export function NavUser({
-  user,
-}: {
-  user: {
-    name: string
-    email: string
-    avatar: string
-  }
-}) {
-  const { isMobile, setOpenMobile } = useSidebar()
-  const router = useRouter()
-  const { mutateAsync: logout, isPending } = useLogout()
-  const initials = user.name
-    ?.split(" ")
-    .map((part) => part[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase() || "U"
-
-  const handleLogout = async () => {
-    try {
-      await logout();
-    } finally {
-      // The dropdown closes itself on item click; on mobile the sidebar it
-      // lives inside is a separate overlay (a Sheet) that wouldn't otherwise
-      // close just because this dropdown did.
-      if (isMobile) setOpenMobile(false);
-      router.push("/");
-    }
-  };
+/**
+ * Rewritten from an avatar + dropdown menu (with a dead "Account" item that
+ * linked nowhere) into the same identity-text + LogoutButton composition
+ * Header.tsx (desktop) and MobileNav (mobile sheet) already use for the
+ * public nav's signed-in state — this is that same footer, not a separate
+ * design invented for the sidebar.
+ */
+export function NavUser({ label }: { label: string }) {
+  const { isMobile, setOpenMobile } = useSidebar();
 
   return (
-    <SidebarMenu>
-      <SidebarMenuItem>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <SidebarMenuButton
-              size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-            >
-              <Avatar className="h-8 w-8 rounded-lg grayscale">
-                <AvatarImage src={user.avatar} alt={user.name} />
-                <AvatarFallback className="rounded-lg">{initials}</AvatarFallback>
-              </Avatar>
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{user.name}</span>
-                <span className="truncate text-xs text-muted-foreground">
-                  {user.email}
-                </span>
-              </div>
-              <IconDotsVertical className="ml-auto size-4" />
-            </SidebarMenuButton>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent
-            className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
-            side={isMobile ? "bottom" : "right"}
-            align="end"
-            sideOffset={4}
-          >
-            <DropdownMenuLabel className="p-0 font-normal">
-              <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                <Avatar className="h-8 w-8 rounded-lg">
-                  <AvatarImage src={user.avatar} alt={user.name} />
-                  <AvatarFallback className="rounded-lg">{initials}</AvatarFallback>
-                </Avatar>
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">{user.name}</span>
-                  <span className="truncate text-xs text-muted-foreground">
-                    {user.email}
-                  </span>
-                </div>
-              </div>
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <IconUserCircle />
-                Account
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout} disabled={isPending}>
-              <IconLogout />
-              {isPending ? "Logging out…" : "Log out"}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </SidebarMenuItem>
-    </SidebarMenu>
-  )
+    <div className="flex flex-col gap-2 px-2 py-1">
+      <p className="truncate px-2 text-sm text-muted-foreground">Signed in as {label}</p>
+      <LogoutButton onLoggedOut={() => isMobile && setOpenMobile(false)}>Log Out</LogoutButton>
+    </div>
+  );
 }

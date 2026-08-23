@@ -27,11 +27,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
   return (
     <SidebarProvider style={{ "--sidebar-width": "calc(var(--spacing) * 72)" } as React.CSSProperties}>
-      <AppSidebar
-        brandLabel="ScriptPay Admin"
-        navItems={ADMIN_NAV_ITEMS}
-        user={{ name: user?.username ?? user?.email ?? "Admin", email: user?.email ?? "", avatar: "" }}
-      />
+      <AppSidebar navItems={ADMIN_NAV_ITEMS} userLabel={user?.username ?? user?.email ?? "Admin"} />
       <SidebarInset>
         <SiteHeader />
         <main className="@container/main flex-1 p-6 pt-8">{children}</main>

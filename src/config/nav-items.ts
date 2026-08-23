@@ -1,41 +1,31 @@
-import type { Icon } from "@tabler/icons-react";
-import {
-  IconBuildingBank,
-  IconCreditCard,
-  IconDashboard,
-  IconFileText,
-  IconHistory,
-  IconHome,
-  IconKey,
-  IconSettings,
-} from "@tabler/icons-react";
-
 export interface NavItem {
   title: string;
   url: string;
-  icon: Icon;
 }
 
 /**
  * Single source of truth for the tenant dashboard's nav — consumed by both
  * the AppSidebar ((client)/layout.tsx) and the public marketing nav
  * (Navbar/MobileNav, via useNavLinks) so an authenticated tenant sees the
- * same links in both places and the two can never drift apart again.
+ * same links, in the same order, rendered by the same link component, in
+ * both places.
  */
 export const TENANT_NAV_ITEMS: NavItem[] = [
-  { title: "Home", url: "/", icon: IconHome },
-  { title: "Dashboard", url: "/dashboard", icon: IconDashboard },
-  { title: "Payments", url: "/payments", icon: IconCreditCard },
-  { title: "Transactions", url: "/transactions", icon: IconHistory },
-  { title: "API Keys", url: "/api-keys", icon: IconKey },
-  { title: "Settings", url: "/settings", icon: IconSettings },
+  { title: "Home", url: "/" },
+  { title: "Dashboard", url: "/dashboard" },
+  { title: "Payments", url: "/payments" },
+  { title: "Transactions", url: "/transactions" },
+  { title: "API Keys", url: "/api-keys" },
+  { title: "Settings", url: "/settings" },
+  { title: "Profile", url: "/profile" },
 ];
 
 /** Same idea as TENANT_NAV_ITEMS, for SUPER_ADMIN — mirrors admin/layout.tsx's sidebar. */
 export const ADMIN_NAV_ITEMS: NavItem[] = [
-  { title: "Home", url: "/", icon: IconHome },
-  { title: "Tenants", url: "/admin/dashboard", icon: IconBuildingBank },
-  { title: "API Keys", url: "/admin/api-keys", icon: IconKey },
-  { title: "Transactions", url: "/admin/transactions", icon: IconHistory },
-  { title: "Audit Logs", url: "/admin/audit-logs", icon: IconFileText },
+  { title: "Home", url: "/" },
+  { title: "Tenants", url: "/admin/dashboard" },
+  { title: "API Keys", url: "/admin/api-keys" },
+  { title: "Transactions", url: "/admin/transactions" },
+  { title: "Audit Logs", url: "/admin/audit-logs" },
+  { title: "Profile", url: "/admin/profile" },
 ];

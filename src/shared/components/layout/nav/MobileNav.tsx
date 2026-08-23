@@ -19,10 +19,12 @@ import { siteConfig } from "@/config/site";
 import Copyright from "@/shared/components/shared/Copyright";
 import Badge from "../../shared/Badge";
 import LogoutButton from "@/modules/auth/logout/components/LogoutButton";
+import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
 
 export default function MobileNav() {
   const [open, setOpen] = useState(false);
   const navLinks = useNavLinks();
+  const { user, isAuthenticated } = useAuth();
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -55,6 +57,9 @@ export default function MobileNav() {
               </li>
             ))}
           </ul>
+          {isAuthenticated && (
+            <p className="px-4 pt-2 text-sm text-muted-foreground truncate">Signed in as {user?.username ?? user?.email}</p>
+          )}
           <LogoutButton onLoggedOut={() => setOpen(false)}>Log Out</LogoutButton>
         </nav>
         <SheetFooter className="text-center p-0">

@@ -4,11 +4,12 @@ import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
 import FullScreenLoader from "@/shared/components/layout/FullScreenLoader";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
-import { AppSidebar } from "@/components/app-sidebar";
-import { SiteHeader } from "@/components/site-header";
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { ADMIN_NAV_ITEMS } from "@/config/nav-items";
+import Header from "@/shared/components/layout/Header";
 
+// Nav (Header, shared with the public marketing pages and the tenant dashboard)
+// is role-aware via useNavLinks() — it resolves to ADMIN_NAV_ITEMS for a
+// logged-in SUPER_ADMIN automatically, so there's no separate admin sidebar to
+// keep in sync with it anymore.
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const { isAuthenticated, isInitialized, user } = useAuth();
 
@@ -26,16 +27,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   }
 
   return (
-    <SidebarProvider style={{ "--sidebar-width": "calc(var(--spacing) * 72)" } as React.CSSProperties}>
-      <AppSidebar
-        brandLabel="ScriptPay Admin"
-        navItems={ADMIN_NAV_ITEMS}
-        user={{ name: user?.username ?? user?.email ?? "Admin", email: user?.email ?? "", avatar: "" }}
-      />
-      <SidebarInset>
-        <SiteHeader title="Admin" />
-        <main className="flex-1 p-6">{children}</main>
-      </SidebarInset>
-    </SidebarProvider>
+    <>
+      <Header />
+      <main className="flex-1 p-6">{children}</main>
+    </>
   );
 }

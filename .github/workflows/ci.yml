@@ -41,11 +41,13 @@ jobs:
     # real deployment env is configured on Vercel, not here. No Sentry auth
     # token is needed for the build itself to succeed (verified locally) —
     # source map upload is best-effort and only happens on a real deploy.
-    env:
-      NODE_ENV: production
-      NEXT_PUBLIC_API_URL: http://localhost:4000
-      NEXT_PUBLIC_SITE_URL: http://localhost:3000
-      NEXT_PUBLIC_SENTRY_DSN: https://public@sentry.example/0
+    #
+    # These vars are scoped to the `npx next build` step only, not the job —
+    # NODE_ENV=production at job level would also apply to `npm ci`, which
+    # then skips devDependencies (e.g. @tailwindcss/postcss), breaking the
+    # build with "Cannot find module '@tailwindcss/postcss'" (seen in CI run
+    # 32862300604, 2026-08-25). `next build` already sets NODE_ENV=production
+    # itself, so it doesn't need to be passed in explicitly either way.
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -54,3 +56,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx next build
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:4000
+          NEXT_PUBLIC_SITE_URL: http://localhost:3000
+          NEXT_PUBLIC_SENTRY_DSN: https://public@sentry.example/0

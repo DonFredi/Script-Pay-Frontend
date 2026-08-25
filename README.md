@@ -55,7 +55,13 @@ Full detail in `CLAUDE.md`.
 
 ## Testing
 
-`npx tsc --noEmit` and `npx eslint .` always work. Running `jest` locally on
-Windows additionally requires the Microsoft Visual C++ Redistributable
-(a prerequisite for a native addon jest depends on) — a one-time machine
-setup, not a project configuration issue.
+`npx tsc --noEmit` and `npx eslint .` always work. `npm test` (→ `jest`) and
+`npm run test:coverage` (→ `jest --coverage`, enforced against per-file
+thresholds) run the suite — the hook/mutation layer across auth, payments,
+transactions, api-keys, tenants, onboarding, and admin, plus the Edge
+middleware and the STK-push form, is covered; see `docs/testing.md` for
+exactly what's tested and what isn't. `.github/workflows/ci.yml` runs all of
+the above on every push and PR. Running `jest` locally on Windows
+additionally requires the Microsoft Visual C++ Redistributable (a
+prerequisite for a native addon jest depends on) — a one-time machine setup,
+not a project configuration issue.

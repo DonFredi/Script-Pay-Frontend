@@ -82,9 +82,16 @@ one shared one.
 
 ## Known gaps
 
-- No automated test currently covers `middleware.ts`'s JWT verification path
-  or `api-client.ts`'s 401-refresh-retry interceptor — both are
-  security-relevant and untested (see `docs/testing.md`).
-- No CI pipeline is configured in this repo as of 2026-08-21 (no
-  `.github/workflows/`) — nothing currently runs `tsc`/`eslint`/tests
-  automatically on a change.
+- No E2E/integration test exercises the real login → cookie → refresh →
+  retry flow against an actual `Script-Pay-Backend` instance — everything
+  today is unit-level with mocked `axios`/api modules (see
+  `docs/testing.md`). The individual pieces (`middleware.ts`'s JWT
+  verification, `api-client.ts`'s 401-refresh-retry interceptor,
+  `AuthProvider.tsx`'s rehydration logic) are each unit-tested, but the
+  full chain end-to-end against a real backend is not.
+
+Resolved since this was last reviewed: `middleware.ts`'s JWT verification
+and `api-client.ts`'s 401-refresh-retry interceptor are both now covered by
+`middleware.spec.ts` / `api-client.spec.ts` (see `docs/testing.md`), and a
+CI pipeline (`.github/workflows/ci.yml`, added 2026-08-25) now runs
+`tsc`/`eslint`/tests on every push and PR.

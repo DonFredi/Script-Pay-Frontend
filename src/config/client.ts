@@ -24,4 +24,23 @@ export const clientConfig = {
     // dependent parts (CSRF, silent refresh, middleware) silently break.
     apiUrl: typeof window !== "undefined" ? "/api/backend" : clientEnv.NEXT_PUBLIC_API_URL,
   },
+  // Every field here defaults to ScriptPay's own values (see clientEnv.ts) — a
+  // relabeled deployment of this codebase overrides these via env vars instead
+  // of editing site.ts. See docs/decisions.md, entry 8.
+  branding: {
+    name: clientEnv.NEXT_PUBLIC_SITE_NAME,
+    description: clientEnv.NEXT_PUBLIC_SITE_DESCRIPTION,
+    contactPhone: clientEnv.NEXT_PUBLIC_CONTACT_PHONE,
+    contactEmail: clientEnv.NEXT_PUBLIC_CONTACT_EMAIL,
+    contactWhatsapp: clientEnv.NEXT_PUBLIC_CONTACT_WHATSAPP,
+    address: clientEnv.NEXT_PUBLIC_ADDRESS,
+    ogImage: clientEnv.NEXT_PUBLIC_OG_IMAGE,
+    social: {
+      twitter: clientEnv.NEXT_PUBLIC_SOCIAL_TWITTER,
+      instagram: clientEnv.NEXT_PUBLIC_SOCIAL_INSTAGRAM,
+      pinterest: clientEnv.NEXT_PUBLIC_SOCIAL_PINTEREST,
+      tiktok: clientEnv.NEXT_PUBLIC_SOCIAL_TIKTOK,
+      github: clientEnv.NEXT_PUBLIC_SOCIAL_GITHUB,
+    },
+  },
 };

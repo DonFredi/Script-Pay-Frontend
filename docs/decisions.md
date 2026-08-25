@@ -156,3 +156,33 @@ anything is sent to Sentry: the generic message, the HTTP status code, and
 themselves. 401/403 responses are excluded from reporting entirely, since
 they're an expected part of the auth flow (token expiry, CSRF mismatch during
 normal operation), not an exceptional condition worth alerting on.
+
+## 8. Branding externalized to env vars instead of hardcoded in `site.ts`
+
+**Problem**: This codebase is intended to be reused as the base for other,
+differently-branded systems ScriptTagg builds for clients — not just operated
+as a single multi-tenant SaaS product. `src/config/site.ts` hardcoded the
+product name, description, contact details, and social links as literal
+strings (`name: "Script Pay"`, `scripttagg@gmail.com`, etc.), and the `Tenant`
+Prisma model on the backend has no branding fields either — every tenant of
+one deployment necessarily sees identical branding, and standing up a
+differently-branded deployment meant editing source, not configuring one.
+
+**Rejected**: Leaving branding hardcoded until a second branded deployment is
+actually needed, then forking `site.ts` at that point. This is the cheap
+choice today and the expensive one the moment a second deployment exists —
+every subsequent fix to `site.ts` would then need to be manually ported
+across N forked copies instead of being a config change.
+
+**Chosen**: `src/config/env/clientEnv.ts` adds `NEXT_PUBLIC_SITE_NAME`,
+`NEXT_PUBLIC_SITE_DESCRIPTION`, `NEXT_PUBLIC_CONTACT_*`, `NEXT_PUBLIC_ADDRESS`,
+`NEXT_PUBLIC_OG_IMAGE`, and `NEXT_PUBLIC_SOCIAL_*`, all optional and each
+defaulting to ScriptPay's real current values — an unset `.env` behaves
+identically to before. `clientConfig.branding` (`src/config/client.ts`)
+exposes them, and `site.ts` now derives `siteConfig` entirely from
+`clientConfig.branding` instead of literal strings, including deriving the
+`tel:`/`mailto:`/`wa.me` links from the raw phone/email values rather than
+requiring separate label/link env vars. This is deliberately scoped to
+*branding* only — it does not attempt to extract shared code (the Daraja
+client, the auth/CSRF pattern) into reusable packages, which is a larger,
+separate change that isn't justified until a second real deployment exists.

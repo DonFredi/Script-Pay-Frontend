@@ -31,33 +31,29 @@ interface SiteConfig {
   };
 }
 
+const { branding } = clientConfig;
+
 export const siteConfig: SiteConfig = {
-  name: "Script Pay",
-  description: "Online M-Pesa payments for businesses",
+  name: branding.name,
+  description: branding.description,
   siteUrl: clientConfig.app.siteUrl || "http://localhost:3000",
   contact: {
     phone: {
-      label: "+254 797 162 262",
-      link: "tel:+254797162262",
+      label: branding.contactPhone,
+      link: `tel:${branding.contactPhone.replace(/\s+/g, "")}`,
     },
     email: {
-      label: "scripttagg@gmail.com",
-      link: "mailto:scripttagg@gmail.com",
+      label: branding.contactEmail,
+      link: `mailto:${branding.contactEmail}`,
     },
     whatsapp: {
-      label: "+254 797 162 262",
-      link: "https://wa.me/254797162262",
+      label: branding.contactWhatsapp,
+      link: `https://wa.me/${branding.contactWhatsapp.replace(/\D/g, "")}`,
     },
   },
   address: {
-    location: "Obama Estate",
+    location: branding.address,
   },
-  ogImage: "",
-  socialLinks: {
-    twitter: "https://x.com/scripttagg",
-    pinterest: "https://pinterest.com/scripttagg",
-    instagram: "https://instagram.com/scripttagg",
-    tiktok: "https://www.tiktok.com/@scripttagg",
-    github: "https://www.github.com/scripttagg",
-  },
+  ogImage: branding.ogImage,
+  socialLinks: branding.social,
 };

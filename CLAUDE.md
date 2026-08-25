@@ -19,7 +19,7 @@ that backend: it owns no database and never calls Safaricom directly.
 - **UI**: shadcn/Radix primitives (`src/components/ui`, `src/shared/components/ui`), Tailwind v4
 - **Auth token verification at the edge**: `jose` — the same JWT library the backend uses to sign tokens
 - **Errors/monitoring**: `@sentry/nextjs`
-- **Email**: `resend` + `@react-email/*` are in the dependency tree but currently unused — the contact form that called them (`contact/actions/send-contact-email.ts`, `ContactForm.tsx`) was removed 2026-08-21. `src/shared/components/email-template/` still holds the templates as orphaned code.
+- **Email**: `resend` + `@react-email/*` are in the dependency tree but not yet wired up — the contact form that previously called them (`contact/actions/send-contact-email.ts`, `ContactForm.tsx`) was removed 2026-08-21. Kept intentionally (not dead code to remove): planned for sending payment receipt emails to tenants. `src/shared/components/email-template/` holds the existing templates, reusable as a starting point once that feature is built.
 - **Payment provider**: Safaricom Daraja, via the backend — no Stripe, no `@stripe/*` dependency
 
 ## Request flow

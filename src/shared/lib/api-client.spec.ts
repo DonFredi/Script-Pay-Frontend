@@ -131,6 +131,8 @@ describe("api-client response interceptor — 401 refresh/retry", () => {
     setAccessToken(null);
     fakeApi.mockReset();
     fakeApiPrivate.post.mockReset();
+    (Sentry.captureException as jest.Mock).mockClear();
+    (Sentry.captureMessage as jest.Mock).mockClear();
   });
 
   it("passes through a non-401 error untouched", async () => {

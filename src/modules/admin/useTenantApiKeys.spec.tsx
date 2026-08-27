@@ -2,7 +2,7 @@ import { renderHook, waitFor, act } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useRevokeTenantApiKey, useTenantApiKeys } from "./useTenantApiKeys";
 import { listTenantApiKeys, revokeTenantApiKey } from "./api-keys.api";
-import type { ApiKeySummary } from "@/modules/api-keys/api-keys.api";
+import type { ApiKeySummary } from "./api-keys.api";
 
 // api-keys.api.ts's own request/response handling is covered by
 // api-client.spec.ts. This covers what useTenantApiKeys.ts itself is

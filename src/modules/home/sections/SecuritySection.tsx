@@ -2,9 +2,9 @@ import { Lock, KeyRound, ShieldCheck, ScrollText } from "lucide-react";
 import SectionWrapper from "@/shared/components/shared/SectionWrapper";
 
 const points = [
-  { icon: Lock, text: "Daraja credentials encrypted at rest, never exposed after saving" },
-  { icon: KeyRound, text: "Passwords and API keys hashed with argon2" },
-  { icon: ShieldCheck, text: "CSRF-protected dashboard, role-based access for staff vs. admins" },
+  { icon: Lock, text: "M-Pesa credentials encrypted at rest, never exposed after saving" },
+  { icon: KeyRound, text: "Passwords never stored in plain text, protected with industry-standard hashing" },
+  { icon: ShieldCheck, text: "Protected dashboard with role-based access for staff vs. admins" },
   { icon: ScrollText, text: "Full audit log of every sensitive action" },
 ];
 

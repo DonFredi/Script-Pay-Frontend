@@ -5,6 +5,7 @@ import { useAuthContext } from "@/providers/AuthProvider";
 import { getCurrentUser } from "@/modules/auth/me/me.api";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/shared/utils/get-error-message";
+import { siteConfig } from "@/config/site";
 
 export const useOnboardTenant = () => {
   const { updateUser } = useAuthContext();
@@ -18,7 +19,7 @@ export const useOnboardTenant = () => {
       // token, so there's no risk of clobbering the freshly-refreshed token here.
       const refreshedUser = await getCurrentUser();
       updateUser(refreshedUser);
-      toast.success("Tenant created — welcome to ScriptPay");
+      toast.success(`Tenant created — welcome to ${siteConfig.name}`);
     },
     onError: (error) => {
       toast.error(getErrorMessage(error));

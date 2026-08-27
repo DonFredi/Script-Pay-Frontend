@@ -1,12 +1,12 @@
 import Link from "next/link";
-import { ShieldCheck, RefreshCw, Code2 } from "lucide-react";
+import { ShieldCheck, RefreshCw, Smartphone } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import SectionWrapper from "@/shared/components/shared/SectionWrapper";
 
 const trustPoints = [
   { icon: ShieldCheck, label: "Encrypted credentials" },
   { icon: RefreshCw, label: "Self-reconciling payments" },
-  { icon: Code2, label: "Built on Safaricom Daraja" },
+  { icon: Smartphone, label: "Powered by Safaricom M-Pesa" },
 ];
 
 const HeroSection = () => {
@@ -21,10 +21,10 @@ const HeroSection = () => {
           <span className="inline-block rounded-full bg-secondary px-3 py-1 text-caption-sm">
             🔔 Built for Kenyan businesses
           </span>
-          <h1>Accept M-Pesa payments without the integration headache</h1>
+          <h1>Accept M-Pesa payments without the setup headache</h1>
           <p className="text-foreground-muted text-lg">
-            STK Push, Paybill, and Till in one API — with automatic reconciliation, retrying webhooks, and a full
-            audit trail, so you always know where a payment actually stands.
+            STK Push, Paybill, and Till — all from one dashboard, with automatic reconciliation and a full audit
+            trail, so you always know where a payment actually stands.
           </p>
           <div className="flex flex-row flex-wrap gap-4 my-4">
             <Button size="lg" asChild>

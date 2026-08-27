@@ -5,12 +5,12 @@ const faqs = [
   {
     question: "Do I need a Paybill or Till number already?",
     answer:
-      "Yes — you'll need your own Safaricom Paybill/Till and Daraja API credentials. ScriptPay doesn't provide these, it integrates with the ones you already have.",
+      "Yes — you'll need your own Safaricom Paybill/Till and M-Pesa API credentials. ScriptPay doesn't provide these, it works with the ones you already have.",
   },
   {
-    question: "What happens if a webhook fails to reach me?",
+    question: "What happens if a payment update doesn't come through?",
     answer:
-      "ScriptPay's reconciliation process checks transaction status directly against Safaricom on a schedule, so your dashboard stays accurate even if a callback is missed.",
+      "ScriptPay's reconciliation process checks transaction status directly against Safaricom on a schedule, so your dashboard stays accurate even if a status update is missed.",
   },
   {
     question: "Can multiple staff members use one account?",

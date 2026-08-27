@@ -1,7 +1,16 @@
 import api from "@/shared/lib/api-client";
 import type { ApiResponse } from "@/shared/types";
 import { ApiCustomError } from "@/shared/errors/api-error";
-import type { ApiKeySummary } from "@/modules/api-keys/api-keys.api";
+
+export interface ApiKeySummary {
+  id: string;
+  keyPrefix: string;
+  scopes: string[];
+  lastUsedAt: string | null;
+  revokedAt: string | null;
+  expiresAt: string | null;
+  createdAt: string;
+}
 
 /** Matches GET /v1/api-keys?tenantId= (SUPER_ADMIN oversight — read-only, no create). */
 export const listTenantApiKeys = async (tenantId: string): Promise<ApiKeySummary[]> => {

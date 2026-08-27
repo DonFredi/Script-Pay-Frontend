@@ -3,7 +3,7 @@ import HeroSection from "./sections/HeroSection";
 import FeaturesSection from "./sections/FeaturesSection";
 import HowItWorks from "./sections/HowItWorks";
 import SecuritySection from "./sections/SecuritySection";
-import DevelopersSection from "./sections/DevelopersSection";
+import EaseOfUseSection from "./sections/EaseOfUseSection";
 import FaqSection from "./sections/FaqSection";
 import CtaSection from "./sections/CtaSection";
 
@@ -14,7 +14,7 @@ const HomePage = () => {
       <FeaturesSection />
       <HowItWorks />
       <SecuritySection />
-      <DevelopersSection />
+      <EaseOfUseSection />
       <FaqSection />
       <CtaSection />
     </PageWrapper>

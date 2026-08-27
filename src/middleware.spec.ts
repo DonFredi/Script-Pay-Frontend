@@ -67,7 +67,7 @@ describe("middleware", () => {
 
   it("lets a protected non-admin route through with only an expired access token plus a refresh token", async () => {
     const expired = await signToken({ role: "MERCHANT" }, "-1s");
-    const res = await middleware(makeRequest("/api-keys", { access_token: expired, refresh_token: "refresh-abc" }));
+    const res = await middleware(makeRequest("/settings", { access_token: expired, refresh_token: "refresh-abc" }));
     expect(isPassThrough(res)).toBe(true);
   });
 

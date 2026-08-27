@@ -44,10 +44,10 @@ src/
 ├── app/                 App Router pages, route groups: (main)/(public|protected), auth/
 │   ├── (main)/(public)/    marketing homepage + /unauthorized — no auth (contact form and API docs page were removed 2026-08-21)
 │   ├── (main)/(protected)/ everything behind login
-│   │   ├── (client)/          tenant dashboard: payments, transactions, api-keys, settings, profile
+│   │   ├── (client)/          tenant dashboard: payments, transactions, settings, profile (self-service API-keys page removed 2026-08-27 — see below)
 │   │   └── admin/               platform-staff-only: tenants (dashboard, per-tenant API keys), audit logs, transactions
 │   └── auth/               login, register, forgot/reset password, verify email
-├── modules/              feature code: auth, tenants, onboarding, payments, transactions, api-keys, admin, home
+├── modules/              feature code: auth, tenants, onboarding, payments, transactions, admin (owns api-keys.api.ts/useTenantApiKeys.ts — oversight only, see below), home
 │   └── <feature>/          *.api.ts (axios calls), *.schema.ts (zod), use*.ts (react-query hooks), components/
 ├── components/           shadcn-derived primitives + admin sidebar/nav shell
 ├── shared/                cross-cutting UI/lib code (api-client, utils, layout, email templates)
@@ -57,6 +57,8 @@ src/
 ```
 
 There is no `apps/`, no `packages/`, no `k8s/`. Real endpoint documentation lives in the backend repo's `CLAUDE.md`/`README.md` — don't duplicate it here.
+
+**Tenant self-service API-keys page removed (2026-08-27)**: the backend's `TenantsService.updateStatus` now auto-provisions a default-scoped API key the moment a tenant is activated and emails the raw key to every `TENANT_ADMIN` (see `Script-Pay-Backend`'s `docs/decisions.md` entry 14) — `POST/GET/DELETE /v1/api-keys` still exist and work exactly as before, but a self-service UI in front of them is no longer a required (or expected) part of onboarding. `src/modules/api-keys/` and `app/(main)/(protected)/(client)/api-keys/` were deleted accordingly, along with their nav entry and `middleware.ts` protected prefix. `SUPER_ADMIN` oversight (list/revoke any tenant's keys via `?tenantId=`) is a separate capability and is untouched — it still lives under `src/modules/admin/` (`api-keys.api.ts`, `useTenantApiKeys.ts`) and `app/(main)/(protected)/admin/`.
 
 ## Auth model
 

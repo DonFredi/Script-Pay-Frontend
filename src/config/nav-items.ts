@@ -15,7 +15,6 @@ export const TENANT_NAV_ITEMS: NavItem[] = [
   { title: "Dashboard", url: "/dashboard" },
   { title: "Payments", url: "/payments" },
   { title: "Transactions", url: "/transactions" },
-  { title: "API Keys", url: "/api-keys" },
   { title: "Settings", url: "/settings" },
   { title: "Profile", url: "/profile" },
 ];

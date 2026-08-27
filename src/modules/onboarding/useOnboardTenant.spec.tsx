@@ -6,6 +6,7 @@ import { onboardTenant } from "./onboarding.api";
 import { getCurrentUser } from "@/modules/auth/me/me.api";
 import { useAuthContext } from "@/providers/AuthProvider";
 import type { User } from "@/modules/auth/shared/types";
+import { siteConfig } from "@/config/site";
 
 // onboarding.api.ts's own request/response handling (including its own
 // refresh-token side effect) is covered by api-client.spec.ts. This covers
@@ -55,7 +56,7 @@ describe("useOnboardTenant", () => {
 
     expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
     expect(updateUser).toHaveBeenCalledWith(mockUser);
-    expect(toast.success).toHaveBeenCalledWith("Tenant created — welcome to ScriptPay");
+    expect(toast.success).toHaveBeenCalledWith(`Tenant created — welcome to ${siteConfig.name}`);
   });
 
   it("does not refetch the profile or update the user when onboarding fails", async () => {

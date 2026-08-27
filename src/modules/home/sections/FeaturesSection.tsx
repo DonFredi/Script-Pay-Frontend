@@ -5,9 +5,9 @@ const features = [
   {
     id: 1,
     icon: Smartphone,
-    title: "Two ways to get paid",
+    title: "Send payment prompts in seconds",
     description:
-      "Trigger STK Push from your own backend via API key, or send a payment prompt straight from the dashboard — no code required for your ops team.",
+      "Trigger an STK Push straight from your dashboard — no developer or code required. Plug it into your own systems later, if and when you need to.",
   },
   {
     id: 2,
@@ -20,14 +20,14 @@ const features = [
     icon: RefreshCw,
     title: "Payments that reconcile themselves",
     description:
-      "ScriptPay actively checks every transaction against Safaricom's own status API and catches drift automatically.",
+      "ScriptPay actively checks every transaction against Safaricom's own records and catches drift automatically.",
   },
   {
     id: 4,
     icon: Webhook,
-    title: "Webhooks that don't drop",
+    title: "Never miss a payment update",
     description:
-      "Callbacks are ingested idempotently and processed with automatic retry, so a slow response on your end doesn't mean a lost payment update.",
+      "Every status update is delivered reliably and retried automatically, so a temporary hiccup never means a lost payment record.",
   },
   {
     id: 5,
@@ -40,13 +40,14 @@ const features = [
     icon: ScrollText,
     title: "A real audit trail",
     description:
-      "Every sensitive action — credential changes, status updates, Daraja interactions — is logged and reviewable.",
+      "Every sensitive action — credential changes, status updates, M-Pesa activity — is logged and reviewable.",
   },
   {
     id: 7,
     icon: KeyRound,
-    title: "Scoped API keys",
-    description: "Issue keys limited to exactly what an integration needs, and revoke them individually.",
+    title: "Secure by default, extensible when you need it",
+    description:
+      "Your account is protected from day one. Want to connect your own systems later? Scoped access keys make sure they only ever do exactly what you allow.",
   },
   {
     id: 8,
@@ -61,7 +62,7 @@ const FeaturesSection = () => {
     <SectionWrapper className="py-10">
       <div className="mb-10 text-center">
         <h2>Everything you need to accept payments</h2>
-        <p className="text-foreground-muted">One integration, the whole M-Pesa payment lifecycle.</p>
+        <p className="text-foreground-muted">One dashboard, the whole M-Pesa payment lifecycle.</p>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {features.map((feature) => {

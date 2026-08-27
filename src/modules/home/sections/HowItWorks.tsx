@@ -5,7 +5,7 @@ const HowItWorks = () => {
     {
       id: 1,
       title: "Send payment request",
-      description: "You initiate a payment using our STK Push API",
+      description: "You send a payment request straight from your ScriptPay dashboard",
     },
     {
       id: 2,
@@ -16,7 +16,7 @@ const HowItWorks = () => {
       id: 3,
       title: "You get notified instantly",
       description:
-        "A webhook fires the moment Safaricom confirms — and reconciliation catches it even if that webhook doesn't arrive",
+        "Your dashboard updates the moment Safaricom confirms — and reconciliation catches it even if that update is delayed",
     },
   ];
   return (

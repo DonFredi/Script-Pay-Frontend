@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import type { StatusType } from "../StatusTypes";
 import { initiateStkPush } from "../payments.api";
 import { usePollTransactionStatus } from "../usePollTransactionStatus";
+import { siteConfig } from "@/config/site";
 
 type TransactionType = "stkPush" | "paybill" | "till";
 
@@ -88,7 +89,7 @@ const StkPushSection = () => {
       const response = await initiateStkPush({
         msisdn: normalizeMsisdn(data.phone),
         amountMinorUnits: Math.round(amountKes * 100),
-        accountReference: (data.accountNumber ?? "ScriptPay").slice(0, 12),
+        accountReference: (data.accountNumber ?? siteConfig.name).slice(0, 12),
         transactionDesc: "Payment".slice(0, 13),
         // Determines which Daraja PIN prompt Safaricom shows the customer —
         // pay-bill style vs buy-goods style. The tenant's actual Paybill/Till

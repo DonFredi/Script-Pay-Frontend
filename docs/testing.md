@@ -21,6 +21,18 @@ in another, and a full `next build` (with dummy `NEXT_PUBLIC_*` values — see
 the workflow file's comments — no real secrets needed to validate a build) in
 a third. This closes the "no CI enforcement" gap this file used to document.
 
+The `build` job's first real run (32862300604, 2026-08-25) failed at `npx
+next build` with `Cannot find module '@tailwindcss/postcss'` — its `env:`
+block (the dummy `NEXT_PUBLIC_*` values, plus a redundant `NODE_ENV:
+production`) was set at job level, so it also applied to the `npm ci` step
+before it; `NODE_ENV=production` makes npm skip `devDependencies` (1216
+packages installed in the unaffected `typecheck-and-lint` job's `npm ci` vs.
+397 in `build`'s), and `@tailwindcss/postcss` — needed by the Tailwind v4
+PostCSS pipeline — is a devDependency. Fixed same day by moving that `env:`
+block down to just the `npx next build` step, so `npm ci` installs
+everything it needs; `next build` sets `NODE_ENV=production` itself
+regardless. Confirmed fixed: run 32869218950 passed all three jobs.
+
 ## What actually has tests today
 
 - `src/modules/auth/shared/hooks/useAuth.spec.tsx` — two cases for the
@@ -115,10 +127,13 @@ a third. This closes the "no CI enforcement" gap this file used to document.
   calling `updateUser` (never `setSession`, which would touch the token) so
   the in-memory user picks up its new `tenantId`.
 
-- `src/modules/api-keys/useApiKeys.spec.tsx`,
-  `admin/useTenants.spec.tsx`, `admin/useTenantApiKeys.spec.tsx` (added
-  2026-08-25) — the query + mutation hook sets for API keys, admin tenant
-  management, and admin per-tenant API key oversight. Each mutation spec
+- `admin/useTenants.spec.tsx`, `admin/useTenantApiKeys.spec.tsx` (added
+  2026-08-25) — the query + mutation hook sets for admin tenant management
+  and admin per-tenant API key oversight. (A third spec in this batch,
+  `src/modules/api-keys/useApiKeys.spec.tsx`, covered the tenant
+  self-service API-keys hooks; removed 2026-08-27 along with the rest of
+  `src/modules/api-keys/` when that page was deleted — see `CLAUDE.md`.)
+  Each mutation spec
   renders its `useQuery` and `useMutation` hooks together against a shared
   `QueryClient` and asserts the list query actually refetches after
   `invalidateQueries` — not just that the mutation itself resolved. (The
@@ -213,12 +228,13 @@ runners) never hits this — it's Windows/MSVC-specific.
 ## Gaps worth knowing about, not fixing speculatively
 
 - Every hook/mutation layer (`use*.ts` + its `*.api.ts`) across auth,
-  payments, transactions, api-keys, tenants, onboarding, and admin now has
-  a test, plus the one component that's the actual money-movement trigger
-  (`StkPushSection.tsx`). What's left is everything else *rendered* —
-  tables, admin pages, other forms (login/register/reset-password UI,
-  tenant-status controls, api-key management UI). That's a real, separate
-  effort (component/UI testing), not a config tweak.
+  payments, transactions, tenants, onboarding, and admin (including admin's
+  API-key oversight) now has a test, plus the one component that's the
+  actual money-movement trigger (`StkPushSection.tsx`). What's left is
+  everything else *rendered* — tables, admin pages, other forms
+  (login/register/reset-password UI, tenant-status controls, admin API-key
+  table). That's a real, separate effort (component/UI testing), not a
+  config tweak.
 - `audit-logs.api.ts`'s `listAuditLogs` has no dedicated hook and no test —
   it's called directly from the admin audit-logs page component.
 - No E2E/integration test against a real (or containerized) backend —

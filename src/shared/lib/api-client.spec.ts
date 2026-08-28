@@ -246,3 +246,20 @@ describe("api-client response interceptor — 401 refresh/retry", () => {
     expect(getAccessToken()).toBe("second-token");
   });
 });
+
+describe("apiPrivate interceptors", () => {
+  const privateRequestUse = fakeApiPrivate.interceptors.request.use.mock.calls[0];
+
+  it("attaches the same request interceptor api uses, so /auth/refresh still gets its headers", () => {
+    expect(privateRequestUse[0]).toBe(requestInterceptor);
+  });
+
+  it("registers no response interceptor, so a failed refresh cannot recurse into the 401 retry flow", () => {
+    expect(fakeApiPrivate.interceptors.response.use).not.toHaveBeenCalled();
+  });
+
+  it("rejects a request-interceptor error instead of swallowing it", async () => {
+    const error = new Error("request setup failed");
+    await expect(privateRequestUse[1](error)).rejects.toBe(error);
+  });
+});

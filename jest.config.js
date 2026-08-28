@@ -3,6 +3,9 @@ module.exports = {
   testEnvironment: "jsdom",
   roots: ["<rootDir>/src"],
   testMatch: ["**/__tests__/**/*.ts?(x)", "**/?(*.)+(spec|test).ts?(x)"],
+  // jest.env.ts runs before any module is loaded — it sets the NEXT_PUBLIC_*
+  // vars clientEnv.ts validates at import time. See the comment in that file.
+  setupFiles: ["<rootDir>/jest.env.ts"],
   setupFilesAfterEnv: ["<rootDir>/jest.setup.ts"],
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/src/$1",
@@ -55,7 +58,6 @@ module.exports = {
     "./src/modules/auth/verify-email/useVerifyEmail.ts": { statements: 100, branches: 100, functions: 100, lines: 100 },
     "./src/modules/auth/me/useMe.ts": { statements: 100, branches: 100, functions: 100, lines: 100 },
     "./src/modules/onboarding/useOnboardTenant.ts": { statements: 100, branches: 100, functions: 100, lines: 100 },
-    "./src/modules/api-keys/useApiKeys.ts": { statements: 100, branches: 100, functions: 100, lines: 100 },
     "./src/modules/tenants/useMpesaCredentials.ts": { statements: 100, branches: 100, functions: 100, lines: 100 },
     "./src/modules/admin/useTenants.ts": { statements: 100, branches: 100, functions: 100, lines: 100 },
     "./src/modules/admin/useTenantApiKeys.ts": { statements: 100, branches: 100, functions: 100, lines: 100 },

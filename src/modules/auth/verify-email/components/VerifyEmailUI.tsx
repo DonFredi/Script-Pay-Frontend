@@ -43,6 +43,10 @@ export default function VerifyEmailUI() {
   useEffect(() => {
     if (!token) return;
     handleVerifyEmail(token);
+    // Intentional run-once-on-mount: verify whatever token was in the URL when
+    // this page loaded; re-running on identity changes of the callback/token
+    // would just re-fire the same verification request.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (token && isPending) return <H4 className="mx-auto">Verifying...</H4>;

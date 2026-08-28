@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { ShieldCheck, RefreshCw, Smartphone } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import SectionWrapper from "@/shared/components/shared/SectionWrapper";
@@ -18,9 +19,7 @@ const HeroSection = () => {
       />
       <SectionWrapper className="flex flex-col md:flex-row md:items-center gap-8 py-12 md:py-16">
         <div className="w-full md:w-1/2 space-y-5">
-          <span className="inline-block rounded-full bg-secondary px-3 py-1 text-caption-sm">
-            🔔 Built for Kenyan businesses
-          </span>
+         
           <h1>Accept M-Pesa payments without the setup headache</h1>
           <p className="text-foreground-muted text-lg">
             STK Push, Paybill, and Till — all from one dashboard, with automatic reconciliation and a full audit
@@ -45,10 +44,13 @@ const HeroSection = () => {
           </div>
         </div>
         <div className="w-full md:w-1/2">
-          <img
+          <Image
             src="/images/hero_section_image.png"
             alt="ScriptPay dashboard preview"
+            width={1536}
+            height={1024}
             className="w-full h-auto rounded-2xl shadow-lg"
+            priority
           />
         </div>
       </SectionWrapper>

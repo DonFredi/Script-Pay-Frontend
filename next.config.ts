@@ -1,7 +1,47 @@
 import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
 
+const isProd = process.env.NODE_ENV === "production";
+
+// script-src needs 'unsafe-eval' in dev only (webpack/Turbopack HMR eval()s
+// chunks) — omitted in production. 'unsafe-inline' stays for both: Next's own
+// bootstrap/hydration scripts and styled-jsx-style inline styles rely on it,
+// and moving to a nonce-based CSP would mean threading a per-request nonce
+// through middleware into every layout — a real follow-up, not this pass.
+const cspDirectives = [
+  "default-src 'self'",
+  `script-src 'self' 'unsafe-inline'${isProd ? "" : " 'unsafe-eval'"}`,
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob:",
+  "font-src 'self' data:",
+  // Sentry's tunnelRoute (/monitoring, see below) proxies error reports
+  // same-origin specifically so this doesn't need to allow *.sentry.io here.
+  "connect-src 'self'",
+  "frame-ancestors 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+].join("; ");
+
 const nextConfig: NextConfig = {
+  // Drops the "X-Powered-By: Next.js" response header — no functional benefit
+  // to advertising the framework/version to every request.
+  poweredByHeader: false,
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          { key: "X-Frame-Options", value: "DENY" },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+          // Only meaningful over HTTPS (production/Vercel) — browsers ignore it on plain HTTP dev.
+          { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
+          { key: "Content-Security-Policy", value: cspDirectives },
+        ],
+      },
+    ];
+  },
   async rewrites() {
     const backendUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
     return [

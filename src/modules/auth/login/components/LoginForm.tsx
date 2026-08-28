@@ -37,7 +37,6 @@ export default function LoginForm() {
       reset();
     } catch (err) {
       toast.error(getErrorMessage(err) || "Incorrect email or password");
-      console.log("Login Error:", err);
     }
   };
   return (

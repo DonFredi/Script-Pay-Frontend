@@ -203,6 +203,12 @@ const responseInterceptorError = async (error: AxiosError<BackendErrorBody>) => 
 api.interceptors.request.use(requestInterceptor, (error) => Promise.reject(error));
 api.interceptors.response.use(responseInterceptor, responseInterceptorError);
 
+// apiPrivate deliberately gets ONLY the request interceptor, not the response
+// one — it's used specifically to call /auth/refresh, and wiring the 401 retry
+// flow onto it would recurse into itself on a failed refresh. But it still needs
+// the Authorization/CSRF request headers like any other authenticated call.
+apiPrivate.interceptors.request.use(requestInterceptor, (error) => Promise.reject(error));
+
 // ← ADD THIS EXPORT: For testing/debugging
 export { getCsrfTokenFromCookie };
 

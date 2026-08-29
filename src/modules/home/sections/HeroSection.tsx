@@ -43,15 +43,35 @@ const HeroSection = () => {
             ))}
           </div>
         </div>
-        <div className="w-full md:w-1/2">
+        {/* The artwork is deliberately greyscale so it sits on the theme's neutral
+            `--primary`; the M-Pesa mark is layered over it rather than baked into
+            the file so it stays sharp at every viewport, keeps Safaricom's own
+            brand colour as the single point of contrast, and can be moved or
+            swapped without re-exporting the image. */}
+        <div className="relative w-full md:w-1/2">
           <Image
-            src="/images/hero_section_image.png"
+            src="/images/hero_section_image.webp"
             alt="ScriptPay dashboard preview"
             width={1536}
             height={1024}
             className="w-full h-auto rounded-2xl shadow-lg"
             priority
           />
+          <div className="absolute bottom-2 left-2 flex items-center gap-2 rounded-rad-lg border bg-card/90 p-2 shadow-lg backdrop-blur-sm sm:bottom-4 sm:left-4 sm:gap-3 sm:p-3">
+            {/* alt="" — the adjacent label already names the mark, so announcing
+                it again would only repeat itself for a screen reader. */}
+            <Image
+              src="/images/mpesa-logo.png"
+              alt=""
+              width={178}
+              height={148}
+              className="h-8 w-auto rounded-rad-xs sm:h-10"
+            />
+            <div className="pr-1">
+              <p className="text-xs font-semibold leading-tight sm:text-sm">Powered by M-Pesa</p>
+              <p className="text-caption-xs text-foreground-muted leading-tight">Safaricom Daraja</p>
+            </div>
+          </div>
         </div>
       </SectionWrapper>
     </div>

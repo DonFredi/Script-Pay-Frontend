@@ -8,6 +8,7 @@ import PageHeading from "@/shared/components/shared/PageHeading";
 import { P } from "@/shared/components/ui/Typography";
 import { useTenants } from "@/modules/admin/useTenants";
 import { AdminApiKeysTable } from "./AdminApiKeysTable";
+import { CreateApiKeyForm } from "./CreateApiKeyForm";
 
 /**
  * Top-level nav entry point for API keys. GET /v1/api-keys requires SUPER_ADMIN
@@ -61,7 +62,10 @@ export default function AdminApiKeysPage() {
         </select>
 
         {selectedTenantId ? (
-          <AdminApiKeysTable tenantId={selectedTenantId} />
+          <>
+            <AdminApiKeysTable tenantId={selectedTenantId} />
+            <CreateApiKeyForm tenantId={selectedTenantId} />
+          </>
         ) : (
           <P className="text-muted-foreground">Select a tenant above to see their API keys.</P>
         )}

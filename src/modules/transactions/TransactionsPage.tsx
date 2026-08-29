@@ -7,7 +7,7 @@ import PageHeading from "@/shared/components/shared/PageHeading";
 import { P } from "@/shared/components/ui/Typography";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useTransactions } from "./useTransactions";
-import type { TransactionStatus } from "@/types";
+import type { TransactionDirection, TransactionStatus } from "@/types";
 
 const STATUS_FILTERS: { value: TransactionStatus | "ALL"; label: string }[] = [
   { value: "ALL", label: "All statuses" },
@@ -18,9 +18,19 @@ const STATUS_FILTERS: { value: TransactionStatus | "ALL"; label: string }[] = [
   { value: "REVERSED", label: "Reversed" },
 ];
 
+const DIRECTION_FILTERS: { value: TransactionDirection | "ALL"; label: string }[] = [
+  { value: "ALL", label: "All transactions" },
+  { value: "INBOUND", label: "Received" },
+  { value: "OUTBOUND", label: "Sent" },
+];
+
 const TransactionsPage = () => {
   const [status, setStatus] = useState<TransactionStatus | "ALL">("ALL");
-  const { transactions, loading, error } = useTransactions({ status: status === "ALL" ? undefined : status });
+  const [direction, setDirection] = useState<TransactionDirection | "ALL">("ALL");
+  const { transactions, loading, error } = useTransactions({
+    status: status === "ALL" ? undefined : status,
+    direction: direction === "ALL" ? undefined : direction,
+  });
 
   return (
     <PageWrapper>
@@ -30,18 +40,35 @@ const TransactionsPage = () => {
             <PageHeading>Transactions</PageHeading>
             <P className="text-muted-foreground">View and manage your transactions</P>
           </div>
-          <Select value={status} onValueChange={(value) => setStatus(value as TransactionStatus | "ALL")}>
-            <SelectTrigger className="w-48">
-              <SelectValue placeholder="Filter by status" />
-            </SelectTrigger>
-            <SelectContent>
-              {STATUS_FILTERS.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Select
+              value={direction}
+              onValueChange={(value) => setDirection(value as TransactionDirection | "ALL")}
+            >
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="Filter by direction" />
+              </SelectTrigger>
+              <SelectContent>
+                {DIRECTION_FILTERS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={status} onValueChange={(value) => setStatus(value as TransactionStatus | "ALL")}>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                {STATUS_FILTERS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </SectionWrapper>
 

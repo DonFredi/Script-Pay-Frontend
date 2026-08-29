@@ -33,6 +33,20 @@ const getStatusStyle = (status: Transaction["status"]) => {
   }
 };
 
+// Collections and payouts share this table (GET /v1/transactions returns both
+// unless filtered), and a payout row is otherwise indistinguishable from a
+// collection one — same columns, same msisdn field meaning the opposite party.
+// Without this badge, a settled payout reads as a customer payment that never
+// happened, the same defect TransactionStatsCards/TransactionDetailPage were
+// already fixed for.
+function DirectionBadge({ direction }: { direction: Transaction["direction"] }) {
+  return direction === "OUTBOUND" ? (
+    <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">Sent</span>
+  ) : (
+    <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">Received</span>
+  );
+}
+
 const TransactionsTable = ({ transactions, loading, detailBasePath = "/transactions" }: TransactionsTableProps) => {
   if (loading) {
     return <div>Loading Transactions...</div>;
@@ -68,7 +82,10 @@ const TransactionsTable = ({ transactions, loading, detailBasePath = "/transacti
               <span className={getStatusStyle(transaction.status)}>{transaction.status}</span>
             </div>
             <div className="mt-2 flex items-center justify-between text-sm text-muted-foreground">
-              <span>{transaction.msisdn}</span>
+              <span className="flex items-center gap-2">
+                <DirectionBadge direction={transaction.direction} />
+                {transaction.msisdn}
+              </span>
               <span className="font-medium text-foreground">{formatKes(transaction.amountMinorUnits)}</span>
             </div>
             <div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
@@ -84,6 +101,7 @@ const TransactionsTable = ({ transactions, loading, detailBasePath = "/transacti
         <TableHeader>
           <TableRow>
             <TableHead className="w-25">ID</TableHead>
+            <TableHead>Direction</TableHead>
             <TableHead>Phone Number</TableHead>
             <TableHead>Amount</TableHead>
             <TableHead>Receipt</TableHead>
@@ -101,6 +119,9 @@ const TransactionsTable = ({ transactions, loading, detailBasePath = "/transacti
                 >
                   {transaction.id.slice(0, 10)}...
                 </Link>
+              </TableCell>
+              <TableCell>
+                <DirectionBadge direction={transaction.direction} />
               </TableCell>
               <TableCell>{transaction.msisdn}</TableCell>
               <TableCell>{formatKes(transaction.amountMinorUnits)}</TableCell>

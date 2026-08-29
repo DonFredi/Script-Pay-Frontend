@@ -113,6 +113,19 @@ regardless. Confirmed fixed: run 32869218950 passed all three jobs.
   forwarded to `listTransactions` unchanged; `useTransaction`'s
   enabled-only-with-an-id gating.
 
+- `src/modules/transactions/components/TransactionStatsCards.spec.tsx`
+  (added 2026-08-29) — that collections and payouts stay separated in the
+  dashboard figures. Payouts arrive in the same list as collections
+  (`GET /v1/transactions` returns both), and this component previously
+  reduced over all of it, so a settled payout was added to *Total Volume*
+  and reported as revenue. The tests pin that payout amounts are excluded
+  from collected volume, reported in their own card rather than netted off,
+  and that a failed payout cannot move the collection success rate.
+  Amounts are asserted on the numeric portion only: `Intl` renders KES as
+  "Ksh" separated by a non-breaking space whose codepoint varies with the
+  ICU build, so matching the full formatted string fails for reasons
+  unrelated to the component.
+
 - `src/modules/auth/forgot-password/useForgotPassword.spec.tsx`,
   `resend-verification/useResendVerification.spec.tsx`,
   `reset-password/useResetPassword.spec.tsx`,

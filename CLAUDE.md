@@ -47,7 +47,7 @@ src/
 │   │   ├── (client)/          tenant dashboard: payments, transactions, settings, profile (self-service API-keys page removed 2026-08-27 — see below)
 │   │   └── admin/               platform-staff-only: tenants (dashboard, per-tenant API keys), audit logs, transactions
 │   └── auth/               login, register, forgot/reset password, verify email
-├── modules/              feature code: auth, tenants, onboarding, payments, transactions, admin (owns api-keys.api.ts/useTenantApiKeys.ts — oversight only, see below), home
+├── modules/              feature code: auth, tenants, onboarding, payments (collections + payouts), transactions, admin (owns api-keys.api.ts/useTenantApiKeys.ts — list/revoke/create, see below), home
 │   └── <feature>/          *.api.ts (axios calls), *.schema.ts (zod), use*.ts (react-query hooks), components/
 ├── components/           shadcn-derived primitives + admin sidebar/nav shell
 ├── shared/                cross-cutting UI/lib code (api-client, utils, layout, email templates)
@@ -59,6 +59,10 @@ src/
 There is no `apps/`, no `packages/`, no `k8s/`. Real endpoint documentation lives in the backend repo's `CLAUDE.md`/`README.md` — don't duplicate it here.
 
 **Tenant self-service API-keys page removed (2026-08-27)**: the backend's `TenantsService.updateStatus` now auto-provisions a default-scoped API key the moment a tenant is activated and emails the raw key to every `TENANT_ADMIN` (see `Script-Pay-Backend`'s `docs/decisions.md` entry 14) — `POST/GET/DELETE /v1/api-keys` still exist and work exactly as before, but a self-service UI in front of them is no longer a required (or expected) part of onboarding. `src/modules/api-keys/` and `app/(main)/(protected)/(client)/api-keys/` were deleted accordingly, along with their nav entry and `middleware.ts` protected prefix. `SUPER_ADMIN` oversight (list/revoke any tenant's keys via `?tenantId=`) is a separate capability and is untouched — it still lives under `src/modules/admin/` (`api-keys.api.ts`, `useTenantApiKeys.ts`) and `app/(main)/(protected)/admin/`.
+
+**Key creation added back on the admin side (2026-08-29)**: the note above described admin as list/revoke only, which stopped being true when payouts landed. The `PAYMENTS_DISBURSE` scope is deliberately excluded from the auto-provisioned default set, so with no create form the only way to enable payouts for a tenant was calling the API by hand. `CreateApiKeyForm.tsx` (under `src/modules/admin/api-keys/`) issues a key with a chosen scope set and shows the raw key exactly once. This is still **not** the deleted tenant self-service page — it is platform staff acting on a tenant's behalf, same as list/revoke. `API_KEY_SCOPES` in `api-keys.api.ts` mirrors the backend's Prisma enum by hand; a scope added there must be added here before it can be requested.
+
+**Payouts / transaction direction (2026-08-29)**: the backend can now send money out (Daraja B2C), and payouts live in the **same** `transactions` table as collections — so `GET /v1/transactions` returns **both** unless `direction` is passed. This is the single easiest thing to get wrong here: any figure meaning "money we took in" must filter on `direction === "INBOUND"` first. It has already caused one real defect — `TransactionStatsCards` summed every settled row and reported a settled payout as revenue. `Transaction` carries `direction` (`INBOUND`/`OUTBOUND`) and the `B2C` channel; `msisdn` is the payer on a collection and the **payee** on a payout, so copy that says "Paid by" has to swap. The payout form (`payments/sections/B2cPayoutSection.tsx`) is `TENANT_ADMIN`-only, mirroring the route's `@Roles("TENANT_ADMIN")` — narrower than the STK route on purpose, since disbursing drains the tenant's own balance. A successful POST means Safaricom **queued** the request, not that money moved, so it reports `PROCESSING` and polls. See `Script-Pay-Backend`'s `docs/decisions.md` entries 15-18.
 
 ## Auth model
 

@@ -126,10 +126,10 @@ src/
 ├── app/                 App Router pages, route groups: (main)/(public|protected), auth/
 │   ├── (main)/(public)/    marketing homepage + /unauthorized — no auth (contact form and API docs page were removed 2026-08-21)
 │   ├── (main)/(protected)/ everything behind login
-│   │   ├── (client)/          tenant dashboard: payments, transactions, api-keys, settings, profile
+│   │   ├── (client)/          tenant dashboard: payments, transactions, settings, profile
 │   │   └── admin/               platform-staff-only: tenants (dashboard, per-tenant API keys), audit logs, transactions
 │   └── auth/               login, register, forgot/reset password, verify email
-├── modules/              feature code: auth, tenants, onboarding, payments, transactions, api-keys, admin, home
+├── modules/              feature code: auth, tenants, onboarding, payments, transactions, admin, home
 │   └── <feature>/          *.api.ts (axios calls), *.schema.ts (zod), use*.ts (react-query hooks), components/
 ├── components/           shadcn-derived primitives + admin sidebar/nav shell
 ├── shared/                cross-cutting UI/lib code (api-client, utils, layout, email templates)
@@ -137,6 +137,37 @@ src/
 ├── config/               env schema (client/server split), site config
 └── middleware.ts         Edge-runtime JWT verification for route protection
 ```
+
+Two corrections to the tree above, both verified against source on 2026-08-29:
+the `(client)/api-keys` route and the `modules/api-keys` feature were listed
+here but had been deleted on 2026-08-27 (see `CLAUDE.md`); admin key management
+lives under `modules/admin/`. Payout UI was added on 2026-08-29 and lives inside
+`modules/payments/` and `modules/transactions/` rather than a module of its own,
+because collections and payouts share the backend's `transactions` table and
+therefore share the list, detail and stats views.
+
+## Transaction direction
+
+`GET /v1/transactions` returns collections **and** payouts — one table backs
+both server-side. Anything meaning "money we took in" has to filter
+`direction === "INBOUND"` explicitly; the default is not collections-only.
+
+This is not hypothetical. `TransactionStatsCards` originally reduced over every
+settled transaction it was handed, so a settled B2C payout was added to *Total
+Volume (Settled)* and presented as revenue, and dragged the success rate with
+it. Nothing threw — the figure was just wrong. Payout volume is now a separate
+card rather than netted off, since "collected 10k" and "collected 10k, sent 7k"
+are different facts and one number cannot carry both.
+
+Related consequences worth knowing before touching these views:
+
+- `msisdn` is the payer on `INBOUND` and the **payee** on `OUTBOUND`, so any
+  "Paid by" copy has to swap (`TransactionDetailPage` does).
+- `POST /v1/dashboard/payments/b2c` is `TENANT_ADMIN`-only — narrower than the
+  STK route, which also admits `TENANT_STAFF`. `B2cPayoutSection` hides itself
+  for other roles, mirroring the guard rather than replacing it.
+- A successful payout POST means Safaricom accepted the request into its queue,
+  not that money moved. The form reports `PROCESSING` and polls.
 
 ## Environment: why client/server env schemas are split
 

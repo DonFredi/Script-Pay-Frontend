@@ -24,8 +24,57 @@ export const initiateStkPush = async (data: InitiateStkPushRequest): Promise<Ini
   return response.data.payload;
 };
 
+export interface InitiateB2cRequest {
+  msisdn: string; // the PAYEE — this is money going out
+  amountMinorUnits: number;
+  remarks: string;
+  occasion?: string;
+  commandId?: "BusinessPayment" | "SalaryPayment" | "PromotionPayment";
+}
+
+export interface InitiateB2cResponse {
+  transactionId: string;
+  /** Always "PROCESSING" on success — see the note below. */
+  status: string;
+}
+
+/**
+ * Matches POST /v1/dashboard/payments/b2c. TENANT_ADMIN only — deliberately narrower
+ * than the STK dashboard route (which also allows TENANT_STAFF), because this drains
+ * the tenant's own balance rather than adding to it. A TENANT_STAFF caller gets 403.
+ *
+ * A resolved promise means Safaricom ACCEPTED THE REQUEST INTO ITS QUEUE, not that
+ * the money arrived. The returned status is "PROCESSING"; only the result callback
+ * settles it, so the UI must poll rather than report success here.
+ *
+ * Notable rejections: 422 insufficient balance (the message carries both the
+ * requested and available amounts), 403 payout credentials not configured.
+ */
+export const initiateB2c = async (data: InitiateB2cRequest): Promise<InitiateB2cResponse> => {
+  const response = await api.post<ApiResponse<InitiateB2cResponse>>("/v1/dashboard/payments/b2c", data);
+  if (!response.data.success) throw new ApiCustomError(response.data.message, response.data.statusCode);
+  return response.data.payload;
+};
+
 export const getTransactionStatus = async (transactionId: string): Promise<Transaction> => {
   const response = await api.get<ApiResponse<Transaction>>(`/v1/transactions/${transactionId}`);
+  if (!response.data.success) throw new ApiCustomError(response.data.message, response.data.statusCode);
+  return response.data.payload;
+};
+
+export interface TenantBalance {
+  tenantId: string;
+  availableMinorUnits: number;
+}
+
+/**
+ * Matches GET /v1/ledger/balance. The same computed figure the backend's own
+ * payout balance check reads before reserving funds — this is that read, outside
+ * the spend path, so a merchant can see what they have before submitting a payout
+ * that might otherwise come back as a 422.
+ */
+export const getBalance = async (): Promise<TenantBalance> => {
+  const response = await api.get<ApiResponse<TenantBalance>>("/v1/ledger/balance");
   if (!response.data.success) throw new ApiCustomError(response.data.message, response.data.statusCode);
   return response.data.payload;
 };

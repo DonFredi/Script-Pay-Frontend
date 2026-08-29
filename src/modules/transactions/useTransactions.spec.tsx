@@ -18,20 +18,26 @@ jest.mock("./transactions.api", () => ({
 const mockListTransactions = listTransactions as jest.Mock;
 const mockGetTransaction = getTransaction as jest.Mock;
 
-const makeTx = (id: string): Transaction => ({
+const makeTx = (id: string, overrides: Partial<Transaction> = {}): Transaction => ({
   id,
   tenantId: "tenant-1",
   channel: "STK_PUSH",
+  direction: "INBOUND",
   status: "SETTLED",
   amountMinorUnits: 10000,
   currency: "KES",
   msisdn: "254700000000",
   merchantRequestId: null,
   checkoutRequestId: null,
+  originatorConversationId: null,
+  conversationId: null,
   mpesaReceiptNumber: null,
   failureReason: null,
+  payoutRemarks: null,
+  payoutOccasion: null,
   createdAt: "2026-08-25T00:00:00.000Z",
   updatedAt: "2026-08-25T00:00:00.000Z",
+  ...overrides,
 });
 
 const wrapper = ({ children }: { children: React.ReactNode }) => {

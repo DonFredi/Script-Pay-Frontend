@@ -23,6 +23,17 @@ function formatDate(iso: string) {
 }
 
 /**
+ * A payout reuses this page, so every piece of copy that assumed money coming IN
+ * has to swap. Rendering "PAID / Paid by / M-Pesa B2C" over a disbursement would
+ * read as a customer payment that never happened.
+ */
+function channelLabel(channel: string): string {
+  if (channel === "STK_PUSH") return "M-Pesa STK Push";
+  if (channel === "B2C") return "M-Pesa payout to customer";
+  return `M-Pesa ${channel}`;
+}
+
+/**
  * Shared between the tenant's own transaction detail route ((client)/transactions/[id])
  * and the admin oversight one (admin/transactions/[id]) — GET /v1/transactions/:id
  * already scopes by caller (own tenant, or unrestricted for SUPER_ADMIN), so one
@@ -54,7 +65,15 @@ export function TransactionDetailPage({ transactionId, backHref }: { transaction
               <div id="receipt" className="w-full shrink-0 rounded-lg border bg-card p-6 print:border-none lg:max-w-sm">
                 <div className="flex items-center justify-between">
                   <P className="font-semibold">{tenant?.name ?? "Receipt"}</P>
-                  <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">PAID</span>
+                  <span
+                    className={
+                      transaction.direction === "OUTBOUND"
+                        ? "rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700"
+                        : "rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700"
+                    }
+                  >
+                    {transaction.direction === "OUTBOUND" ? "SENT" : "PAID"}
+                  </span>
                 </div>
                 <dl className="mt-4 space-y-2 text-sm">
                   <div className="flex justify-between">
@@ -62,16 +81,22 @@ export function TransactionDetailPage({ transactionId, backHref }: { transaction
                     <dd className="font-mono">{transaction.mpesaReceiptNumber ?? "—"}</dd>
                   </div>
                   <div className="flex justify-between">
-                    <dt className="text-muted-foreground">Amount Paid</dt>
+                    <dt className="text-muted-foreground">
+                      {transaction.direction === "OUTBOUND" ? "Amount Sent" : "Amount Paid"}
+                    </dt>
                     <dd className="font-medium">{formatKes(transaction.amountMinorUnits)}</dd>
                   </div>
                   <div className="flex justify-between">
-                    <dt className="text-muted-foreground">Paid by</dt>
+                    {/* msisdn is the payer on a collection and the payee on a payout —
+                        the same field means opposite people depending on direction. */}
+                    <dt className="text-muted-foreground">
+                      {transaction.direction === "OUTBOUND" ? "Paid to" : "Paid by"}
+                    </dt>
                     <dd>{transaction.msisdn}</dd>
                   </div>
                   <div className="flex justify-between">
                     <dt className="text-muted-foreground">Payment method</dt>
-                    <dd>{transaction.channel === "STK_PUSH" ? "M-Pesa STK Push" : `M-Pesa ${transaction.channel}`}</dd>
+                    <dd>{channelLabel(transaction.channel)}</dd>
                   </div>
                   <div className="flex justify-between">
                     <dt className="text-muted-foreground">Date</dt>
@@ -94,7 +119,15 @@ export function TransactionDetailPage({ transactionId, backHref }: { transaction
                 <dd className="font-medium">{formatKes(transaction.amountMinorUnits)}</dd>
               </div>
               <div>
-                <dt className="text-xs text-muted-foreground">Phone number</dt>
+                <dt className="text-xs text-muted-foreground">Direction</dt>
+                <dd className="font-medium">
+                  {transaction.direction === "OUTBOUND" ? "Payout (money out)" : "Collection (money in)"}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs text-muted-foreground">
+                  {transaction.direction === "OUTBOUND" ? "Recipient" : "Phone number"}
+                </dt>
                 <dd>{transaction.msisdn}</dd>
               </div>
               <div>

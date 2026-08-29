@@ -13,6 +13,10 @@ const chartConfig = {
   other: { label: "Pending / Failed", color: "var(--chart-3)" },
 } satisfies ChartConfig;
 
+// Collections only — same reasoning TransactionStatsCards documents: a settled
+// payout landing in the same "settled" count as a settled collection would move
+// this chart for a reason that has nothing to do with money coming in, and there
+// would be no way to tell which happened from the chart alone.
 function buildDailySeries(transactions: Transaction[]) {
   const buckets = new Map<string, { date: string; settled: number; other: number }>();
   const today = new Date();
@@ -23,6 +27,7 @@ function buildDailySeries(transactions: Transaction[]) {
     buckets.set(key, { date: key, settled: 0, other: 0 });
   }
   for (const t of transactions) {
+    if (t.direction === "OUTBOUND") continue;
     const bucket = buckets.get(t.createdAt.slice(0, 10));
     if (!bucket) continue;
     if (t.status === "SETTLED") bucket.settled += 1;
@@ -44,7 +49,7 @@ export function TransactionVolumeChart({ transactions }: { transactions: Transac
     <Card className="@container/card">
       <CardHeader>
         <CardTitle>Transaction Volume</CardTitle>
-        <CardDescription>Daily transaction count, last {DAYS} days</CardDescription>
+        <CardDescription>Daily collections received, last {DAYS} days</CardDescription>
       </CardHeader>
       <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
         <ChartContainer config={chartConfig} className="aspect-auto h-[250px] w-full">

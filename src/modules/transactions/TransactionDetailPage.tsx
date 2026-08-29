@@ -142,14 +142,29 @@ export function TransactionDetailPage({ transactionId, backHref }: { transaction
                 <dt className="text-xs text-muted-foreground">Currency</dt>
                 <dd>{transaction.currency}</dd>
               </div>
-              <div>
-                <dt className="text-xs text-muted-foreground">Merchant request ID</dt>
-                <dd className="font-mono text-xs break-all">{transaction.merchantRequestId ?? "—"}</dd>
-              </div>
-              <div>
-                <dt className="text-xs text-muted-foreground">Checkout request ID</dt>
-                <dd className="font-mono text-xs break-all">{transaction.checkoutRequestId ?? "—"}</dd>
-              </div>
+              {transaction.direction === "OUTBOUND" ? (
+                <>
+                  <div>
+                    <dt className="text-xs text-muted-foreground">Originator conversation ID</dt>
+                    <dd className="font-mono text-xs break-all">{transaction.originatorConversationId ?? "—"}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs text-muted-foreground">Conversation ID</dt>
+                    <dd className="font-mono text-xs break-all">{transaction.conversationId ?? "—"}</dd>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div>
+                    <dt className="text-xs text-muted-foreground">Merchant request ID</dt>
+                    <dd className="font-mono text-xs break-all">{transaction.merchantRequestId ?? "—"}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs text-muted-foreground">Checkout request ID</dt>
+                    <dd className="font-mono text-xs break-all">{transaction.checkoutRequestId ?? "—"}</dd>
+                  </div>
+                </>
+              )}
               <div>
                 <dt className="text-xs text-muted-foreground">Created</dt>
                 <dd>{formatDate(transaction.createdAt)}</dd>
@@ -158,6 +173,18 @@ export function TransactionDetailPage({ transactionId, backHref }: { transaction
                 <dt className="text-xs text-muted-foreground">Updated</dt>
                 <dd>{formatDate(transaction.updatedAt)}</dd>
               </div>
+              {transaction.direction === "OUTBOUND" && transaction.payoutRemarks && (
+                <div>
+                  <dt className="text-xs text-muted-foreground">Remarks</dt>
+                  <dd>{transaction.payoutRemarks}</dd>
+                </div>
+              )}
+              {transaction.direction === "OUTBOUND" && transaction.payoutOccasion && (
+                <div>
+                  <dt className="text-xs text-muted-foreground">Occasion</dt>
+                  <dd>{transaction.payoutOccasion}</dd>
+                </div>
+              )}
               {transaction.failureReason && (
                 <div className="col-span-full">
                   <dt className="text-xs text-muted-foreground">Failure reason</dt>

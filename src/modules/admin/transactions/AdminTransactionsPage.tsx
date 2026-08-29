@@ -12,7 +12,7 @@ import { useTransactions } from "@/modules/transactions/useTransactions";
 import TransactionsTable from "@/modules/transactions/sections/TransactionsTable";
 import { TransactionStatsCards } from "@/modules/transactions/components/TransactionStatsCards";
 import { TransactionVolumeChart } from "@/modules/transactions/components/TransactionVolumeChart";
-import type { TransactionStatus } from "@/types";
+import type { TransactionDirection, TransactionStatus } from "@/types";
 
 /**
  * Didn't exist before — was one of two admin nav links pointing at a 404
@@ -43,12 +43,19 @@ const STATUS_FILTERS: { value: TransactionStatus | "ALL"; label: string }[] = [
   { value: "REVERSED", label: "Reversed" },
 ];
 
+const DIRECTION_FILTERS: { value: TransactionDirection | "ALL"; label: string }[] = [
+  { value: "ALL", label: "All transactions" },
+  { value: "INBOUND", label: "Received" },
+  { value: "OUTBOUND", label: "Sent" },
+];
+
 export default function AdminTransactionsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: tenants, isLoading: tenantsLoading } = useTenants();
   const [selectedTenantId, setSelectedTenantId] = useState<string>(searchParams.get("tenantId") ?? "");
   const [status, setStatus] = useState<TransactionStatus | "ALL">("ALL");
+  const [direction, setDirection] = useState<TransactionDirection | "ALL">("ALL");
   const hasAutoSelected = useRef(false);
 
   function handleTenantChange(tenantId: string) {
@@ -72,6 +79,7 @@ export default function AdminTransactionsPage() {
   const { transactions, loading } = useTransactions({
     tenantId: selectedTenantId || undefined,
     status: status === "ALL" ? undefined : status,
+    direction: direction === "ALL" ? undefined : direction,
   });
 
   return (
@@ -107,6 +115,19 @@ export default function AdminTransactionsPage() {
             </SelectTrigger>
             <SelectContent>
               {STATUS_FILTERS.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={direction} onValueChange={(value) => setDirection(value as TransactionDirection | "ALL")}>
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="Filter by direction" />
+            </SelectTrigger>
+            <SelectContent>
+              {DIRECTION_FILTERS.map((option) => (
                 <SelectItem key={option.value} value={option.value}>
                   {option.label}
                 </SelectItem>

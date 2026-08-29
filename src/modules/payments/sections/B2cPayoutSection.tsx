@@ -11,8 +11,10 @@ import { toast } from "sonner";
 import { b2cSchema, type B2cFormData } from "../b2c.schema";
 import { RequestStatus } from "../components/RequestStatus";
 import type { StatusType } from "../StatusTypes";
+import { formatKes } from "@/types";
 import { initiateB2c } from "../payments.api";
 import { usePollTransactionStatus } from "../usePollTransactionStatus";
+import { useBalance } from "../useBalance";
 import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
 
 /** Normalizes 07XX/01XX to Daraja's required 2547XX/2541XX format. */
@@ -49,6 +51,7 @@ const B2cPayoutSection = () => {
   } = useForm<B2cFormData>({ resolver: zodResolver(b2cSchema) });
 
   const { data: polledTransaction } = usePollTransactionStatus(activeTransactionId);
+  const { data: balance, refetch: refetchBalance } = useBalance();
 
   useEffect(() => {
     if (status !== "success" && status !== "failed") return;
@@ -67,12 +70,18 @@ const B2cPayoutSection = () => {
         setStatus("success");
         setMessage("Payout sent successfully.");
         setActiveTransactionId(null);
+        // Settling a payout doesn't move tenant_balance further (it was already
+        // debited on reservation), but a release-on-failure or a fresh collection
+        // landing in the meantime would — refetch rather than let the figure go
+        // stale until the next 10s poll.
+        refetchBalance();
       } else if (polledTransaction.status === "FAILED" || polledTransaction.status === "REVERSED") {
         setStatus("failed");
         // The reservation is released automatically on failure, so the funds are
         // spendable again — worth saying, or the merchant assumes money is stuck.
         setMessage(polledTransaction.failureReason ?? "Payout failed. The reserved funds have been returned.");
         setActiveTransactionId(null);
+        refetchBalance();
       } else {
         setStatus("pending");
       }
@@ -94,6 +103,10 @@ const B2cPayoutSection = () => {
       setActiveTransactionId(response.transactionId);
       setMessage("Payout accepted by Safaricom — awaiting confirmation…");
       reset();
+      // The reservation debits tenant_balance as soon as the request is accepted,
+      // before Safaricom's result callback ever arrives — refetch now rather than
+      // show a stale "still spendable" figure while this payout is in flight.
+      refetchBalance();
     } catch (error) {
       const msg = getErrorMessage(error);
       setMessage(msg);
@@ -113,6 +126,12 @@ const B2cPayoutSection = () => {
         <h3>Send a Payout</h3>
         <p className="text-muted-foreground">
           Send money from your balance to a customer&apos;s M-Pesa number. The amount is held as soon as you submit.
+        </p>
+        <p className="mt-1 text-sm">
+          Available balance:{" "}
+          <span className="font-medium text-foreground">
+            {balance ? formatKes(balance.availableMinorUnits) : "—"}
+          </span>
         </p>
 
         <form onSubmit={handleSubmit(handlePayout)} className="mt-4 max-w-full">

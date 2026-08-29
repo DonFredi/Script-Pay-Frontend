@@ -61,3 +61,20 @@ export const getTransactionStatus = async (transactionId: string): Promise<Trans
   if (!response.data.success) throw new ApiCustomError(response.data.message, response.data.statusCode);
   return response.data.payload;
 };
+
+export interface TenantBalance {
+  tenantId: string;
+  availableMinorUnits: number;
+}
+
+/**
+ * Matches GET /v1/ledger/balance. The same computed figure the backend's own
+ * payout balance check reads before reserving funds — this is that read, outside
+ * the spend path, so a merchant can see what they have before submitting a payout
+ * that might otherwise come back as a 422.
+ */
+export const getBalance = async (): Promise<TenantBalance> => {
+  const response = await api.get<ApiResponse<TenantBalance>>("/v1/ledger/balance");
+  if (!response.data.success) throw new ApiCustomError(response.data.message, response.data.statusCode);
+  return response.data.payload;
+};

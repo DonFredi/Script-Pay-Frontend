@@ -106,4 +106,17 @@ describe("middleware", () => {
     const res = await middleware(makeRequest("/settings", { access_token: token }));
     expect(isPassThrough(res)).toBe(true);
   });
+
+  it("fails closed and logs loudly when JWT_ACCESS_SECRET is missing, instead of silently falling back", async () => {
+    process.env.JWT_ACCESS_SECRET = "";
+    const errorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+
+    const token = await signToken({ role: "MERCHANT" });
+    const res = await middleware(makeRequest("/settings", { access_token: token }));
+
+    expect(isPassThrough(res)).toBe(true); // no refresh token needed on a non-admin route
+    expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining("JWT_ACCESS_SECRET is missing or empty"));
+
+    errorSpy.mockRestore();
+  });
 });

@@ -163,6 +163,36 @@ describe("api-client response interceptor — 401 refresh/retry", () => {
     expect(Sentry.captureMessage).toHaveBeenCalledWith("CSRF token validation failed", "error");
   });
 
+  it("scrubs a validation error down to field names only, never the submitted values", async () => {
+    const error = makeError({
+      response: {
+        status: 422,
+        data: {
+          success: false,
+          message: "Validation failed",
+          statusCode: 422,
+          error: { details: { fieldErrors: { msisdn: ["Invalid phone number"], amountMinorUnits: ["Required"] } } },
+        },
+      },
+      config: { url: "/payments/stk-push", method: "post" },
+    });
+
+    await expect(responseInterceptorError(error)).rejects.toBe(error);
+
+    expect(Sentry.captureException).toHaveBeenCalledWith(
+      error,
+      expect.objectContaining({
+        extra: expect.objectContaining({
+          data: expect.objectContaining({
+            message: "Validation failed",
+            statusCode: 422,
+            invalidFields: ["msisdn", "amountMinorUnits"],
+          }),
+        }),
+      }),
+    );
+  });
+
   it("refreshes once on a first 401, then retries the original request", async () => {
     fakeApiPrivate.post.mockResolvedValue({ data: { payload: { accessToken: "new-token" } } });
     fakeApi.mockResolvedValue({ data: "retried-ok" });
@@ -215,6 +245,30 @@ describe("api-client response interceptor — 401 refresh/retry", () => {
     expect(fakeApi).toHaveBeenCalledWith(firstRequest);
     expect(fakeApi).toHaveBeenCalledWith(secondRequest);
     expect(fakeApi).toHaveBeenCalledTimes(2);
+  });
+
+  it("rejects a concurrent 401 queued behind an in-flight refresh that ultimately fails", async () => {
+    let rejectRefresh!: (error: unknown) => void;
+    const refreshError = new Error("refresh failed");
+    fakeApiPrivate.post.mockReturnValue(
+      new Promise((_resolve, reject) => {
+        rejectRefresh = reject;
+      }),
+    );
+
+    const firstRequest: RequestConfig = { url: "/transactions", method: "get" };
+    const secondRequest: RequestConfig = { url: "/payments/stk-push", method: "post" };
+
+    const firstCall = responseInterceptorError(makeError({ response: { status: 401 }, config: firstRequest }));
+    const secondCall = responseInterceptorError(makeError({ response: { status: 401 }, config: secondRequest }));
+
+    expect(fakeApiPrivate.post).toHaveBeenCalledTimes(1);
+
+    rejectRefresh(refreshError);
+
+    await expect(firstCall).rejects.toBe(refreshError);
+    await expect(secondCall).rejects.toBe(refreshError);
+    expect(fakeApi).not.toHaveBeenCalled();
   });
 
   it("clears the access token and rejects queued requests when refresh itself fails", async () => {

@@ -1,15 +1,26 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import PageWrapper from "@/shared/components/shared/PageWrapper";
 import SectionWrapper from "@/shared/components/shared/SectionWrapper";
 import PageHeading from "@/shared/components/shared/PageHeading";
 import { P } from "@/shared/components/ui/Typography";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useTenant, useUpdateTenantStatus } from "@/modules/admin/useTenants";
 import type { TenantStatus } from "@/modules/admin/tenants.api";
 
-const STATUS_OPTIONS: TenantStatus[] = ["active", "suspended", "pending_kyc"];
+const STATUS_OPTIONS: TenantStatus[] = ["active", "suspended", "pending_kyc", "removed"];
 
 /**
  * Single-tenant overview for platform staff — the tenants list only ever showed
@@ -21,6 +32,7 @@ const STATUS_OPTIONS: TenantStatus[] = ["active", "suspended", "pending_kyc"];
 export function AdminTenantDetailPage({ tenantId }: { tenantId: string }) {
   const { data: tenant, isLoading, error } = useTenant(tenantId);
   const updateStatus = useUpdateTenantStatus(tenantId);
+  const [confirmRemoveOpen, setConfirmRemoveOpen] = useState(false);
 
   async function handleStatusChange(status: TenantStatus) {
     try {
@@ -29,6 +41,22 @@ export function AdminTenantDetailPage({ tenantId }: { tenantId: string }) {
     } catch {
       toast.error("Could not update tenant status");
     }
+  }
+
+  // "removed" is a platform-only kill switch (see TenantsService.updateStatus)
+  // and harder to reverse than a self-service suspend, so it's the one status
+  // that requires confirmation instead of firing immediately on select.
+  function handleStatusSelect(status: TenantStatus) {
+    if (status === "removed") {
+      setConfirmRemoveOpen(true);
+      return;
+    }
+    void handleStatusChange(status);
+  }
+
+  async function confirmRemove() {
+    await handleStatusChange("removed");
+    setConfirmRemoveOpen(false);
   }
 
   return (
@@ -63,7 +91,7 @@ export function AdminTenantDetailPage({ tenantId }: { tenantId: string }) {
                 <dd>
                   <select
                     value={tenant.status}
-                    onChange={(e) => handleStatusChange(e.target.value as TenantStatus)}
+                    onChange={(e) => handleStatusSelect(e.target.value as TenantStatus)}
                     disabled={updateStatus.isPending}
                     className="rounded-md border border-input bg-background px-2 py-1 text-sm capitalize"
                   >
@@ -88,6 +116,27 @@ export function AdminTenantDetailPage({ tenantId }: { tenantId: string }) {
                 Audit logs →
               </Link>
             </div>
+
+            <AlertDialog open={confirmRemoveOpen} onOpenChange={setConfirmRemoveOpen}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Remove {tenant.name}?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This blocks all payments in both directions for this tenant. Only a SUPER_ADMIN can reactivate
+                    it afterwards.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => void confirmRemove()}
+                    className="bg-destructive text-white hover:bg-destructive/90"
+                  >
+                    Remove tenant
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </>
         )}
       </SectionWrapper>

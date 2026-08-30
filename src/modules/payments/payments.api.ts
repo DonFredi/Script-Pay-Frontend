@@ -30,6 +30,14 @@ export interface InitiateB2cRequest {
   remarks: string;
   occasion?: string;
   commandId?: "BusinessPayment" | "SalaryPayment" | "PromotionPayment";
+  // Caller-supplied dedupe token for the backend's (tenantId, idempotencyKey) unique
+  // constraint — sent as a header (below), this field only exists so callers can
+  // also pass it in the body if they'd rather. See B2cPayoutSection: the key must
+  // stay the same across a retry of the SAME intended payout (a failed/hung submit
+  // resubmitted) and only change once that payout actually succeeds — a fresh key
+  // per click would defeat the point, since a genuine retry needs the same key to
+  // be recognized as a replay rather than a second real payout.
+  idempotencyKey?: string;
 }
 
 export interface InitiateB2cResponse {
@@ -50,8 +58,10 @@ export interface InitiateB2cResponse {
  * Notable rejections: 422 insufficient balance (the message carries both the
  * requested and available amounts), 403 payout credentials not configured.
  */
-export const initiateB2c = async (data: InitiateB2cRequest): Promise<InitiateB2cResponse> => {
-  const response = await api.post<ApiResponse<InitiateB2cResponse>>("/v1/dashboard/payments/b2c", data);
+export const initiateB2c = async ({ idempotencyKey, ...data }: InitiateB2cRequest): Promise<InitiateB2cResponse> => {
+  const response = await api.post<ApiResponse<InitiateB2cResponse>>("/v1/dashboard/payments/b2c", data, {
+    headers: idempotencyKey ? { "Idempotency-Key": idempotencyKey } : undefined,
+  });
   if (!response.data.success) throw new ApiCustomError(response.data.message, response.data.statusCode);
   return response.data.payload;
 };

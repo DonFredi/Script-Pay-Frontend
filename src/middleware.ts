@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { jwtVerify } from "jose";
+import z from "zod";
 /**
  * This file did not exist at all before — every route protection check in this
  * codebase was `"use client"` (ProtectedLayout, admin/layout.tsx), meaning:
@@ -14,6 +15,13 @@ import { jwtVerify } from "jose";
  *
  * IMPORTANT: JWT_ACCESS_SECRET here must be the EXACT SAME value as the backend's
  * JWT_ACCESS_SECRET env var — this is a shared secret between the two codebases.
+ * It's validated inline (below) rather than through src/config/env/serverEnv.ts —
+ * that module is intentionally loaded only in the Node.js runtime, gated behind
+ * `NEXT_RUNTIME === "nodejs"` in src/instrumentation.ts, and this file runs on the
+ * Edge runtime. Pulling the whole serverEnv module into the Edge bundle would be
+ * an unreviewed change to code that has already caused a real prod-only Edge
+ * regression once (see CLAUDE.md's proxy.ts note) — a minimal, local zod check is
+ * the safer way to fail loudly on a missing/misconfigured secret.
  *
  * Known tradeoff, on purpose: the access_token cookie is short-lived (~15 min,
  * matching the backend's JWT_ACCESS_TTL_SECONDS) so it can be legitimately expired
@@ -43,9 +51,21 @@ const ADMIN_ONLY_PREFIXES = ["/admin"];
 // an earlier duplicate here read from a <meta> tag that was never rendered and relied on
 // `document`, which doesn't exist in the Edge middleware runtime; it could never have run.
 
+const jwtAccessSecretSchema = z.string().min(1, "JWT_ACCESS_SECRET must be set");
+
 async function verifyAccessToken(token: string): Promise<{ role: string } | null> {
+  const secretResult = jwtAccessSecretSchema.safeParse(process.env.JWT_ACCESS_SECRET);
+  if (!secretResult.success) {
+    // Loud on purpose: a missing/empty secret means EVERY access token fails
+    // verification (fail-closed), which used to happen silently — this makes it
+    // show up in function logs instead of reading as unexplained "weird prod
+    // behavior" where protected routes fall back to the refresh-token path.
+    console.error("[middleware] JWT_ACCESS_SECRET is missing or empty — all access token verification will fail closed.");
+    return null;
+  }
+
   try {
-    const secret = new TextEncoder().encode(process.env.JWT_ACCESS_SECRET);
+    const secret = new TextEncoder().encode(secretResult.data);
     const { payload } = await jwtVerify(token, secret);
     return { role: payload.role as string };
   } catch {

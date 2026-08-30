@@ -43,6 +43,11 @@ const B2cPayoutSection = () => {
   const [status, setStatus] = useState<StatusType>("idle");
   const [message, setMessage] = useState("");
   const [activeTransactionId, setActiveTransactionId] = useState<string | null>(null);
+  // Stable across retries of the SAME payout attempt (a hung/failed submit
+  // resubmitted with the form still filled in) so the backend's
+  // (tenantId, idempotencyKey) constraint recognizes it as a replay rather than a
+  // second real disbursement — only rotated after an attempt actually succeeds.
+  const [idempotencyKey, setIdempotencyKey] = useState(() => crypto.randomUUID());
   const {
     register,
     handleSubmit,
@@ -98,11 +103,16 @@ const B2cPayoutSection = () => {
         amountMinorUnits: Math.round(Number(data.amount) * 100),
         remarks: data.remarks,
         occasion: data.occasion || undefined,
+        idempotencyKey,
       });
 
       setActiveTransactionId(response.transactionId);
       setMessage("Payout accepted by Safaricom — awaiting confirmation…");
       reset();
+      // This attempt succeeded — the next submission is a genuinely new payout, so
+      // it needs a key of its own rather than reusing one the backend already has
+      // a transaction recorded against.
+      setIdempotencyKey(crypto.randomUUID());
       // The reservation debits tenant_balance as soon as the request is accepted,
       // before Safaricom's result callback ever arrives — refetch now rather than
       // show a stale "still spendable" figure while this payout is in flight.

@@ -7,7 +7,6 @@ import {
   BellRing,
   ScrollText,
   KeyRound,
-  BarChart3,
 } from "lucide-react";
 import SectionWrapper from "@/shared/components/shared/SectionWrapper";
 
@@ -65,12 +64,6 @@ const features = [
     title: "Secure by default, extensible when you need it",
     description:
       "Your account is protected from day one. Want to connect your own systems later? Scoped access keys make sure they only ever do exactly what you allow.",
-  },
-  {
-    id: 9,
-    icon: BarChart3,
-    title: "Reporting that answers the real question",
-    description: "Success rate, per-status breakdowns, and drift counts over any window — not just a raw transaction list.",
   },
 ];
 

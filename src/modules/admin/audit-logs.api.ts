@@ -14,9 +14,16 @@ export interface AuditLogEntry {
   createdAt: string;
 }
 
-/** Matches GET /v1/audit-logs (SUPER_ADMIN only, enforced server-side). */
+/** Matches GET /v1/audit-logs (SUPER_ADMIN or TENANT_ADMIN, tenant-scoping enforced server-side). */
 export const listAuditLogs = async (params?: { tenantId?: string }): Promise<AuditLogEntry[]> => {
   const response = await api.get<ApiResponse<AuditLogEntry[]>>("/v1/audit-logs", { params });
+  if (!response.data.success) throw new ApiCustomError(response.data.message, response.data.statusCode);
+  return response.data.payload;
+};
+
+/** Matches GET /v1/audit-logs/:id — tenant-scoping enforced server-side, same as listAuditLogs. */
+export const getAuditLog = async (id: string): Promise<AuditLogEntry> => {
+  const response = await api.get<ApiResponse<AuditLogEntry>>(`/v1/audit-logs/${id}`);
   if (!response.data.success) throw new ApiCustomError(response.data.message, response.data.statusCode);
   return response.data.payload;
 };

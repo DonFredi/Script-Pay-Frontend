@@ -30,12 +30,14 @@ export default function AdminDashboardPage() {
         {error && <P className="text-destructive">Could not load tenants.</P>}
         {!isLoading && !error && !tenants?.length && <P className="text-muted-foreground">No tenants yet.</P>}
 
+        {/* No "Shortcode" column here anymore — a tenant can hold several
+            (Till/Paybill/B2C) now, which doesn't fit one table cell. See the
+            per-tenant detail page for the full list. */}
         {!!tenants?.length && (
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
-                <TableHead>Shortcode</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Onboarded</TableHead>
                 <TableHead className="text-right"></TableHead>
@@ -49,7 +51,6 @@ export default function AdminDashboardPage() {
                       {tenant.name}
                     </Link>
                   </TableCell>
-                  <TableCell>{tenant.businessShortcode}</TableCell>
                   <TableCell className="capitalize">{tenant.status.replace("_", " ")}</TableCell>
                   <TableCell className="text-muted-foreground">
                     {new Date(tenant.createdAt).toLocaleDateString("en-KE")}

@@ -10,7 +10,6 @@ export interface OnboardTenantRequest {
 export interface Tenant {
   id: string;
   name: string;
-  businessShortcode: string;
   status: string;
 }
 

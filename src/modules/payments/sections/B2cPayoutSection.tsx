@@ -3,8 +3,9 @@ import SectionWrapper from "@/shared/components/shared/SectionWrapper";
 import { Button } from "@/shared/components/ui/button";
 import { Field, FieldError, FieldGroup, FieldLabel, FieldSet } from "@/shared/components/ui/field";
 import { Input } from "@/shared/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getErrorMessage } from "@/shared/utils/get-error-message";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -16,6 +17,7 @@ import { initiateB2c } from "../payments.api";
 import { usePollTransactionStatus } from "../usePollTransactionStatus";
 import { useBalance } from "../useBalance";
 import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
+import { useTenantShortcodes } from "@/modules/tenants/useTenantShortcodes";
 
 /** Normalizes 07XX/01XX to Daraja's required 2547XX/2541XX format. */
 function normalizeMsisdn(phone: string): string {
@@ -58,6 +60,17 @@ const B2cPayoutSection = () => {
   const { data: polledTransaction } = usePollTransactionStatus(activeTransactionId);
   const { data: balance, refetch: refetchBalance } = useBalance();
 
+  // Which of the tenant's shortcodes this payout draws from — required by the
+  // backend (InitiateB2cDto.shortcodeId), never defaulted server-side. A tenant
+  // with exactly one B2C-enabled shortcode never sees this as a choice — derived
+  // directly during render rather than synced via an Effect, so there's no extra
+  // render pass and no state to fall out of sync with the fetched list; more than
+  // one and manualShortcodeId holds the explicit pick from the selector below.
+  const { data: shortcodes } = useTenantShortcodes();
+  const b2cShortcodes = useMemo(() => (shortcodes ?? []).filter((s) => s.type === "B2C"), [shortcodes]);
+  const [manualShortcodeId, setManualShortcodeId] = useState<string | null>(null);
+  const selectedShortcodeId = manualShortcodeId ?? (b2cShortcodes.length === 1 ? b2cShortcodes[0].id : "");
+
   useEffect(() => {
     if (status !== "success" && status !== "failed") return;
     const timeout = setTimeout(() => setMessage(""), 6000);
@@ -99,6 +112,7 @@ const B2cPayoutSection = () => {
 
     try {
       const response = await initiateB2c({
+        shortcodeId: selectedShortcodeId,
         msisdn: normalizeMsisdn(data.phone),
         amountMinorUnits: Math.round(Number(data.amount) * 100),
         remarks: data.remarks,
@@ -144,9 +158,33 @@ const B2cPayoutSection = () => {
           </span>
         </p>
 
+        {b2cShortcodes.length === 0 && (
+          <p className="mt-4 text-sm text-muted-foreground">
+            No B2C-enabled shortcode is configured yet — add one in Settings before sending a payout.
+          </p>
+        )}
+
         <form onSubmit={handleSubmit(handlePayout)} className="mt-4 max-w-full">
           <FieldSet>
             <FieldGroup className="gap-3">
+              {b2cShortcodes.length > 1 && (
+                <Field>
+                  <FieldLabel htmlFor="payout-shortcode">Pay out from</FieldLabel>
+                  <Select value={selectedShortcodeId} onValueChange={setManualShortcodeId}>
+                    <SelectTrigger id="payout-shortcode" className="w-full">
+                      <SelectValue placeholder="Select a shortcode" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {b2cShortcodes.map((sc) => (
+                        <SelectItem key={sc.id} value={sc.id}>
+                          {sc.shortcode}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </Field>
+              )}
+
               <Field>
                 <FieldLabel htmlFor="payout-phone">Recipient Phone Number</FieldLabel>
                 <Input
@@ -186,14 +224,22 @@ const B2cPayoutSection = () => {
                 {errors.occasion && <FieldError>{errors.occasion.message}</FieldError>}
               </Field>
 
-              <Button type="submit" className="mt-2" disabled={isSubmitting || status === "pending"}>
+              <Button
+                type="submit"
+                className="mt-2"
+                disabled={isSubmitting || status === "pending" || !selectedShortcodeId}
+              >
                 {status === "pending" ? "Sending…" : "Send payout"}
               </Button>
             </FieldGroup>
           </FieldSet>
         </form>
 
-        {status !== "idle" && <RequestStatus status={status} />}
+        {status !== "idle" && (
+          <div className="mt-6">
+            <RequestStatus status={status} />
+          </div>
+        )}
         {message && <p className="mt-3 text-sm text-muted-foreground">{message}</p>}
       </div>
     </SectionWrapper>

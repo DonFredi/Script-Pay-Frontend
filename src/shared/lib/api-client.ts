@@ -48,7 +48,10 @@ export const setAccessToken = (token: string | null) => {
 export const getAccessToken = () => accessToken;
 
 let isRefreshing = false;
-let refreshQueue: (() => void)[] = [];
+// Invoked once the in-flight refresh settles: `null` on success (retry with the
+// new token), the refresh error on failure (reject — a request must never hang
+// forever waiting on a refresh that already failed).
+let refreshQueue: ((refreshError: unknown | null) => void)[] = [];
 
 const api = axios.create({
   // Resolves to a same-origin proxy path in the browser, an absolute URL on the
@@ -164,8 +167,14 @@ const responseInterceptorError = async (error: AxiosError<BackendErrorBody>) => 
 
   // if already refreshing, queue request
   if (isRefreshing) {
-    return new Promise((resolve) => {
-      refreshQueue.push(() => resolve(api(originalRequest)));
+    return new Promise((resolve, reject) => {
+      refreshQueue.push((refreshError) => {
+        if (refreshError) {
+          reject(refreshError);
+        } else {
+          resolve(api(originalRequest));
+        }
+      });
     });
   }
 
@@ -182,7 +191,7 @@ const responseInterceptorError = async (error: AxiosError<BackendErrorBody>) => 
     setAccessToken(newAccessToken);
 
     // retry all queued requests
-    refreshQueue.forEach((cb) => cb());
+    refreshQueue.forEach((cb) => cb(null));
     refreshQueue = [];
 
     // retry original request
@@ -193,6 +202,9 @@ const responseInterceptorError = async (error: AxiosError<BackendErrorBody>) => 
       error: String(refreshError),
     });
     setAccessToken(null);
+    // reject every queued request instead of letting them hang forever —
+    // the refresh they were waiting on will never succeed now.
+    refreshQueue.forEach((cb) => cb(refreshError));
     refreshQueue = [];
     return Promise.reject(refreshError);
   } finally {
@@ -209,7 +221,8 @@ api.interceptors.response.use(responseInterceptor, responseInterceptorError);
 // the Authorization/CSRF request headers like any other authenticated call.
 apiPrivate.interceptors.request.use(requestInterceptor, (error) => Promise.reject(error));
 
-// ← ADD THIS EXPORT: For testing/debugging
+// Exported solely so api-client.spec.ts can unit-test the cookie-parsing logic
+// directly — not part of the module's intended public API otherwise.
 export { getCsrfTokenFromCookie };
 
 export default api;

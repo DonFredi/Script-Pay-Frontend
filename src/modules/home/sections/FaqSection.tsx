@@ -17,6 +17,11 @@ const faqs = [
     answer:
       "Yes — tenant admins can create staff logins with more limited permissions, for example without access to audit logs.",
   },
+  {
+    question: "Can I send money out, not just collect it?",
+    answer:
+      "Yes — B2C payouts let a tenant admin disburse funds straight to a customer's M-Pesa number from the same dashboard. Payouts draw from your own balance and are tracked separately from revenue.",
+  },
 ];
 
 const FaqSection = () => {

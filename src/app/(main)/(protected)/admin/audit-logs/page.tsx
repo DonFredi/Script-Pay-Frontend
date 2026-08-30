@@ -29,6 +29,9 @@ export default function AdminAuditLogsPage() {
     queryFn: () => listAuditLogs({ tenantId }),
   });
 
+  const detailHref = (id: string) =>
+    tenantId ? `/admin/audit-logs/${id}?tenantId=${tenantId}` : `/admin/audit-logs/${id}`;
+
   return (
     <PageWrapper>
       <SectionWrapper className="space-y-6">
@@ -51,30 +54,64 @@ export default function AdminAuditLogsPage() {
         {!isLoading && !error && !logs?.length && <P className="text-muted-foreground">No entries yet.</P>}
 
         {!!logs?.length && (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Action</TableHead>
-                <TableHead>Actor</TableHead>
-                <TableHead>Target</TableHead>
-                <TableHead className="text-right">When</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+          <>
+            {/* Below md, a wide row-per-line table forces overflow-x-auto, and on a
+                real touchscreen a tap with any sideways finger drift gets read as
+                that scroll gesture — the browser cancels the click and the row never
+                navigates (see TransactionsTable for the same fix, first found there).
+                A stacked card list has no competing scroll surface, so this doesn't
+                come up. */}
+            <div className="flex flex-col gap-3 md:hidden">
               {logs.map((log) => (
-                <TableRow key={log.id}>
-                  <TableCell className="font-mono text-xs">{log.action}</TableCell>
-                  <TableCell className="text-muted-foreground">{log.actorType}</TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {log.targetType ? `${log.targetType}:${log.targetId?.slice(0, 8)}` : "—"}
-                  </TableCell>
-                  <TableCell className="text-right text-muted-foreground">
-                    {new Date(log.createdAt).toLocaleString("en-KE")}
-                  </TableCell>
-                </TableRow>
+                <Link
+                  key={log.id}
+                  href={detailHref(log.id)}
+                  className="block rounded-lg border bg-card p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-mono text-xs font-medium">{log.action}</span>
+                    <span className="text-xs text-muted-foreground">{log.actorType}</span>
+                  </div>
+                  <div className="mt-2 flex items-center justify-between text-sm text-muted-foreground">
+                    <span>{log.targetType ? `${log.targetType}:${log.targetId?.slice(0, 8)}` : "—"}</span>
+                    <span>{new Date(log.createdAt).toLocaleString("en-KE")}</span>
+                  </div>
+                </Link>
               ))}
-            </TableBody>
-          </Table>
+            </div>
+
+            <Table className="hidden md:table">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Action</TableHead>
+                  <TableHead>Actor</TableHead>
+                  <TableHead>Target</TableHead>
+                  <TableHead className="text-right">When</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {logs.map((log) => (
+                  <TableRow key={log.id} className="relative">
+                    <TableCell className="font-mono text-xs">
+                      <Link
+                        href={detailHref(log.id)}
+                        className="rounded-sm after:absolute after:inset-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      >
+                        {log.action}
+                      </Link>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">{log.actorType}</TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {log.targetType ? `${log.targetType}:${log.targetId?.slice(0, 8)}` : "—"}
+                    </TableCell>
+                    <TableCell className="text-right text-muted-foreground">
+                      {new Date(log.createdAt).toLocaleString("en-KE")}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </>
         )}
       </SectionWrapper>
     </PageWrapper>

@@ -15,6 +15,15 @@ export const stkPushSchema = z.object({
     })
     .refine((value) => Number(value) > 0, {
       message: "Amount must be greater than 0",
+    })
+    // STK Push (Lipa na M-Pesa Online) is commonly documented as capped at KES
+    // 150,000/transaction — lower than B2C's 250,000 (see b2c.schema.ts), since
+    // Safaricom tariffs the two separately. Same role as that check: an obvious
+    // over-limit typo caught before it reaches Safaricom, not a substitute for the
+    // server's own limit (which may also vary per tenant's negotiated tariff) —
+    // confirm the exact figure against current Daraja docs before launch.
+    .refine((value) => Number(value) <= 150_000, {
+      message: "A single STK push cannot exceed KES 150,000",
     }),
 
   // paybillNumber/tillNumber removed — a tenant's Paybill/Till number is THEIR

@@ -15,7 +15,7 @@ const EaseOfUseSection = () => {
     <SectionWrapper className="py-10">
       <div className="flex flex-col md:flex-row items-center gap-10">
         <div className="w-full md:w-1/2 space-y-4">
-          <h2>Set up in an afternoon, no developers required</h2>
+          <h2>Simple to set up, simple to use</h2>
           <ul className="space-y-3">
             {points.map((point) => (
               <li key={point} className="flex items-start gap-2">

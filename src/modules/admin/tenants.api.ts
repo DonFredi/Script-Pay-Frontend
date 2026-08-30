@@ -2,7 +2,7 @@ import api from "@/shared/lib/api-client";
 import type { ApiResponse } from "@/shared/types";
 import { ApiCustomError } from "@/shared/errors/api-error";
 
-export type TenantStatus = "active" | "suspended" | "pending_kyc";
+export type TenantStatus = "active" | "suspended" | "pending_kyc" | "removed";
 
 export interface Tenant {
   id: string;
@@ -33,7 +33,11 @@ export const getTenant = async (id: string): Promise<Tenant> => {
   return response.data.payload;
 };
 
-/** Matches PATCH /v1/tenants/:id/status (SUPER_ADMIN, or a tenant admin acting on their own tenant). */
+/**
+ * Matches PATCH /v1/tenants/:id/status (SUPER_ADMIN, or a tenant admin acting on
+ * their own tenant). "removed" is SUPER_ADMIN-only in both directions — the backend
+ * rejects a non-SUPER_ADMIN caller setting or reinstating from "removed".
+ */
 export const updateTenantStatus = async (id: string, status: TenantStatus): Promise<Tenant> => {
   const response = await api.patch<ApiResponse<Tenant>>(`/v1/tenants/${id}/status`, { status });
   if (!response.data.success) throw new ApiCustomError(response.data.message, response.data.statusCode);

@@ -9,12 +9,14 @@ import { useTenants } from "@/modules/admin/useTenants";
 import { AdminApiKeysTable } from "@/modules/admin/api-keys/AdminApiKeysTable";
 
 /**
- * SUPER_ADMIN oversight of one tenant's API keys — read + revoke only. There is no
- * create form here on purpose: key issuance stays tenant self-service (see
- * docs/decisions.md); this page exists so platform staff can audit or kill a key
- * during an incident without needing tenant credentials. Arrived here already
- * knowing the tenant (from the tenant detail page) — AdminApiKeysPage is the
- * sibling entry point for reaching the same table via a tenant picker instead.
+ * SUPER_ADMIN oversight of one tenant's API keys, entered from the tenant detail
+ * page (tenant already known, so no picker needed) — deliberately read + revoke
+ * only, no create form. Key creation lives on the sibling AdminApiKeysPage
+ * (reached via a tenant picker instead of a known tenantId) using
+ * CreateApiKeyForm, since that's the entry point staff use when deliberately
+ * provisioning a key (e.g. granting PAYMENTS_DISBURSE) rather than responding to
+ * an incident. This page stays revoke-focused so it can do one thing fast: kill a
+ * key during an incident without needing tenant credentials or extra clicks.
  */
 export function AdminTenantApiKeysPage({ tenantId }: { tenantId: string }) {
   const { data: tenants } = useTenants();

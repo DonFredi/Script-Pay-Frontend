@@ -20,10 +20,11 @@ const HeroSection = () => {
       <SectionWrapper className="flex flex-col md:flex-row md:items-center gap-8 py-12 md:py-16">
         <div className="w-full md:w-1/2 space-y-5">
          
-          <h1>Accept M-Pesa payments without the setup headache</h1>
+          <h1>Send and receive M-Pesa payments without the setup headache</h1>
           <p className="text-foreground-muted text-lg">
-            STK Push, Paybill, and Till — all from one dashboard, with automatic reconciliation and a full audit
-            trail, so you always know where a payment actually stands.
+            Collect via STK Push, Paybill, and Till, or disburse funds straight out with B2C payouts — all from one
+            dashboard, with automatic reconciliation and a full audit trail, so you always know where a payment
+            actually stands.
           </p>
           <div className="flex flex-row flex-wrap gap-4 my-4">
             <Button size="lg" asChild>

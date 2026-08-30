@@ -30,15 +30,25 @@ export function MpesaCredentialsForm() {
   const { mutateAsync, isPending } = useSetMpesaCredentials(user?.tenantId ?? "");
 
   const onSubmit = async (data: MpesaCredentialsFormData) => {
-    await mutateAsync(data);
-    // Clears the secret/passkey fields after a successful save — they're
-    // never returned by the backend, so leaving stale values on screen would
-    // be misleading (it isn't "still there", it's just not re-fetchable).
+    // Empty optional inputs arrive as "" from the form, but the backend's zod
+    // schema requires initiatorName/securityCredential to be either both
+    // present or both absent (undefined) — "" fails its min(1) check.
+    await mutateAsync({
+      ...data,
+      initiatorName: data.initiatorName || undefined,
+      securityCredential: data.securityCredential || undefined,
+    });
+    // Clears the secret/passkey/security credential fields after a successful
+    // save — they're never returned by the backend, so leaving stale values
+    // on screen would be misleading (it isn't "still there", it's just not
+    // re-fetchable).
     reset({
       businessShortcode: data.businessShortcode,
       consumerKey: data.consumerKey,
       consumerSecret: "",
       passkey: "",
+      initiatorName: data.initiatorName,
+      securityCredential: "",
     });
   };
 
@@ -82,6 +92,32 @@ export function MpesaCredentialsForm() {
           </a>
           . Your secret and passkey are encrypted before storage and are never shown again after saving.
         </P>
+
+        <div className="mt-6 border-t pt-6">
+          <h3 className="text-sm font-medium mb-1">B2C Payout Credentials</h3>
+          <P className="text-xs text-muted-foreground mb-4">
+            Optional — only needed to send payouts. Leave both blank if you only collect payments.
+          </P>
+
+          <FieldGroup className="gap-4">
+            <Field>
+              <FieldLabel htmlFor="initiatorName">Initiator Name</FieldLabel>
+              <Input id="initiatorName" {...register("initiatorName")} />
+              {errors.initiatorName && <FieldError>{errors.initiatorName.message}</FieldError>}
+            </Field>
+
+            <Field>
+              <FieldLabel htmlFor="securityCredential">Security Credential</FieldLabel>
+              <PasswordInput id="securityCredential" {...register("securityCredential")} />
+              {errors.securityCredential && <FieldError>{errors.securityCredential.message}</FieldError>}
+            </Field>
+          </FieldGroup>
+
+          <P className="mt-2 text-xs text-muted-foreground">
+            The security credential is the value Safaricom&apos;s portal gives you — your initiator password already
+            encrypted against their certificate. Paste it exactly as provided; we never see the raw password.
+          </P>
+        </div>
 
         <Button type="submit" disabled={isPending} className="mt-4">
           {isPending ? "Saving…" : "Save credentials"}

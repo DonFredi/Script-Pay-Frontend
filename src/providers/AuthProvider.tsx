@@ -105,6 +105,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+  // api-client.ts's response interceptor dispatches this once a refresh
+  // definitively fails (the refresh call itself errors, or the backend
+  // returns HTTP 200 with no accessToken because the refresh cookie is dead)
+  // — previously nothing cleared `user`, so ProtectedLayout's isAuthenticated
+  // check never flipped and the app stayed stuck on a broken page until the
+  // user manually logged out and back in.
+  useEffect(() => {
+    function handleSessionExpired() {
+      clearSession();
+    }
+
+    window.addEventListener("auth:session-expired", handleSessionExpired);
+    return () => window.removeEventListener("auth:session-expired", handleSessionExpired);
+  }, [clearSession]);
+
   return (
     <AuthContext.Provider
       value={{ user, loading, isAuthenticated: !!user, isInitialized, setSession, clearSession, updateUser }}

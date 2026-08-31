@@ -107,6 +107,22 @@ describe("AuthProvider", () => {
     expect(result.current.isAuthenticated).toBe(false);
   });
 
+  it("logs out when api-client dispatches auth:session-expired (a refresh that definitively failed mid-session)", async () => {
+    mockApiPrivatePost.mockResolvedValue({ data: { payload: { accessToken: "fresh-token" } } });
+    mockApiGet.mockResolvedValue({ data: { success: true, payload: mockUser } });
+
+    const { result } = renderHook(() => useAuthContext(), { wrapper: AuthProvider });
+    await waitFor(() => expect(result.current.user).toEqual(mockUser));
+
+    act(() => {
+      window.dispatchEvent(new CustomEvent("auth:session-expired"));
+    });
+
+    expect(mockSetAccessToken).toHaveBeenLastCalledWith(null);
+    expect(result.current.user).toBeNull();
+    expect(result.current.isAuthenticated).toBe(false);
+  });
+
   it("updateUser replaces the user without touching the access token", async () => {
     mockApiPrivatePost.mockResolvedValue({ data: { payload: { accessToken: "fresh-token" } } });
     mockApiGet.mockResolvedValue({ data: { success: true, payload: mockUser } });

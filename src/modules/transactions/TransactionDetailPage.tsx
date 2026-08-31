@@ -23,6 +23,25 @@ function formatDate(iso: string) {
 }
 
 /**
+ * Placeholder logo marks — swap each `<span>` for an `<img>`/`<svg>` once the
+ * official ScriptPay and ScriptTagg logo assets exist. This replaces the
+ * website nav (hidden on print via SiteHeader/Sidebar's `print:hidden`) as
+ * the heading a printed receipt actually shows.
+ */
+function ReceiptLetterhead() {
+  return (
+    <div className="mb-4 flex items-center justify-between gap-3 border-b pb-3">
+      <div className="flex h-10 w-28 items-center justify-center rounded border border-dashed text-[10px] font-medium text-muted-foreground">
+        <span>ScriptPay logo</span>
+      </div>
+      <div className="flex h-10 w-28 items-center justify-center rounded border border-dashed text-[10px] font-medium text-muted-foreground">
+        <span>ScriptTagg logo</span>
+      </div>
+    </div>
+  );
+}
+
+/**
  * A payout reuses this page, so every piece of copy that assumed money coming IN
  * has to swap. Rendering "PAID / Paid by / M-Pesa B2C" over a disbursement would
  * read as a customer payment that never happened.
@@ -49,7 +68,7 @@ export function TransactionDetailPage({ transactionId, backHref }: { transaction
   return (
     <PageWrapper>
       <SectionWrapper className="space-y-6">
-        <div>
+        <div className="print:hidden">
           <Link href={backHref} className="text-sm text-muted-foreground underline">
             ← Transactions
           </Link>
@@ -62,7 +81,11 @@ export function TransactionDetailPage({ transactionId, backHref }: { transaction
         {transaction && (
           <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
             {transaction.status === "SETTLED" && (
-              <div id="receipt" className="w-full shrink-0 rounded-lg border bg-card p-6 print:border-none lg:max-w-sm">
+              <div
+                id="receipt"
+                className="w-full shrink-0 rounded-lg border bg-card p-6 print:mx-auto print:w-full print:max-w-lg print:border-none lg:max-w-sm"
+              >
+                <ReceiptLetterhead />
                 <div className="flex items-center justify-between">
                   <P className="font-semibold">{tenant?.name ?? "Receipt"}</P>
                   <span
@@ -109,7 +132,7 @@ export function TransactionDetailPage({ transactionId, backHref }: { transaction
               </div>
             )}
 
-            <dl className="grid flex-1 grid-cols-1 gap-x-8 gap-y-4 rounded-lg border bg-card p-6 sm:grid-cols-2 lg:grid-cols-3">
+            <dl className="grid flex-1 grid-cols-1 gap-x-8 gap-y-4 rounded-lg border bg-card p-6 sm:grid-cols-2 lg:grid-cols-3 print:hidden">
               <div>
                 <dt className="text-xs text-muted-foreground">Status</dt>
                 <dd className={STATUS_STYLES[transaction.status]}>{transaction.status}</dd>

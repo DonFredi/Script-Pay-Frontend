@@ -44,6 +44,18 @@ export const createShortcode = async (data: CreateShortcodeInput, tenantId?: str
   return response.data.payload;
 };
 
+export const updateShortcode = async (
+  id: string,
+  data: Partial<CreateShortcodeInput>,
+  tenantId?: string,
+): Promise<ShortcodeSummary> => {
+  const response = await api.patch<ApiResponse<ShortcodeSummary>>(`/v1/tenant-shortcodes/${id}`, data, {
+    params: tenantId ? { tenantId } : undefined,
+  });
+  if (!response.data.success) throw new ApiCustomError(response.data.message, response.data.statusCode);
+  return response.data.payload;
+};
+
 export const removeShortcode = async (id: string, tenantId?: string): Promise<void> => {
   const response = await api.delete<ApiResponse<null>>(`/v1/tenant-shortcodes/${id}`, {
     params: tenantId ? { tenantId } : undefined,

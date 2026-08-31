@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/shared/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Field, FieldError, FieldGroup, FieldLabel, FieldSet } from "@/shared/components/ui/field";
 import { Input } from "@/shared/components/ui/input";
 import { PasswordInput } from "@/shared/components/ui/password-input";
@@ -13,7 +14,7 @@ import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
 import { mpesaCredentialsSchema, type MpesaCredentialsFormData } from "../mpesa-credentials.schema";
 import { useSetMpesaCredentials } from "../useMpesaCredentials";
 import { createShortcodeSchema, SHORTCODE_TYPES, type CreateShortcodeFormData, type ShortcodeType } from "../tenant-shortcodes.schema";
-import { useCreateShortcode, useRemoveShortcode, useTenantShortcodes } from "../useTenantShortcodes";
+import { useCreateShortcode, useRemoveShortcode, useSetDefaultShortcode, useTenantShortcodes } from "../useTenantShortcodes";
 
 /**
  * Lets a tenant configure their OWN Daraja setup — required before any payment
@@ -102,6 +103,8 @@ function ShortcodesSection() {
   const [showAddForm, setShowAddForm] = useState(false);
   const { data: shortcodes, isLoading } = useTenantShortcodes();
   const { mutateAsync: removeShortcode, isPending: isRemoving } = useRemoveShortcode();
+  const { mutate: setDefaultShortcode, isPending: isSettingDefault, variables: settingDefaultId } =
+    useSetDefaultShortcode();
 
   return (
     <div>
@@ -140,15 +143,28 @@ function ShortcodesSection() {
                       : "STK credentials not yet configured"}
                 </p>
               </div>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                disabled={isRemoving}
-                onClick={() => removeShortcode(sc.id)}
-              >
-                Remove
-              </Button>
+              <div className="flex items-center gap-2">
+                {!sc.isDefault && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={isSettingDefault}
+                    onClick={() => setDefaultShortcode(sc.id)}
+                  >
+                    {isSettingDefault && settingDefaultId === sc.id ? "Setting…" : "Make default"}
+                  </Button>
+                )}
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  disabled={isRemoving}
+                  onClick={() => removeShortcode(sc.id)}
+                >
+                  Remove
+                </Button>
+              </div>
             </li>
           ))}
         </ul>
@@ -175,9 +191,12 @@ function AddShortcodeForm({ onDone }: { onDone: () => void }) {
   // and this value only exists to pick which fields to render.
   const [type, setType] = useState<ShortcodeType>("PAYBILL");
 
+  const [isDefault, setIsDefault] = useState(false);
+
   const onSubmit = async (data: CreateShortcodeFormData) => {
     await mutateAsync({
       ...data,
+      isDefault,
       passkey: data.passkey || undefined,
       initiatorName: data.initiatorName || undefined,
       securityCredential: data.securityCredential || undefined,
@@ -239,6 +258,17 @@ function AddShortcodeForm({ onDone }: { onDone: () => void }) {
               <PasswordInput id="shortcode-passkey" {...register("passkey")} />
             </Field>
           )}
+
+          <Field orientation="horizontal">
+            <Checkbox
+              id="shortcode-isDefault"
+              checked={isDefault}
+              onCheckedChange={(checked) => setIsDefault(checked === true)}
+            />
+            <FieldLabel htmlFor="shortcode-isDefault" className="font-normal">
+              Set as default {type === "B2C" ? "payout" : "STK"} shortcode
+            </FieldLabel>
+          </Field>
 
           <div className="flex gap-2">
             <Button type="submit" disabled={isPending}>

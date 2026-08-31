@@ -58,7 +58,11 @@ regardless. Confirmed fixed: run 32869218950 passed all three jobs.
   itself rejecting (`setAccessToken(null)`, unauthenticated, no thrown
   error), and `setSession`/`clearSession`/`updateUser` each doing exactly
   what they claim (`updateUser` in particular must not touch the access
-  token — see its comment in `AuthProvider.tsx`).
+  token — see its comment in `AuthProvider.tsx`). A test added 2026-08-31
+  covers the other trigger for `clearSession`: `api-client.ts` dispatching
+  `window`'s `"auth:session-expired"` event when a refresh definitively
+  fails mid-session (see `docs/decisions.md` entry 9) — asserts the listener
+  actually logs the user out, not just that it's registered.
 
 - `src/middleware.spec.ts` — the Edge route-protection logic in
   `middleware.ts`: unprotected routes pass through; a protected route with no
@@ -80,10 +84,15 @@ regardless. Confirmed fixed: run 32869218950 passed all three jobs.
   in-flight one rather than triggering its own refresh call, the
   refresh-endpoint-itself and already-retried guards against infinite loops,
   and the failure path (`setAccessToken(null)`, queue cleared, `isRefreshing`
-  released so a later 401 can retry). `axios.create()` is mocked to return a
-  fake callable instance so the two private interceptor functions can be
-  captured from its `interceptors.request.use`/`interceptors.response.use`
-  mock calls and invoked directly.
+  released so a later 401 can retry). Two cases added 2026-08-31 close the
+  gap that let a real bug through (see `docs/decisions.md` entry 9): a
+  refresh that resolves HTTP 200 with `accessToken: null` is asserted to
+  reject (not silently retry with no auth header), and a definitive refresh
+  failure is asserted to dispatch `window`'s `"auth:session-expired"` event
+  exactly once. `axios.create()` is mocked to return a fake callable instance
+  so the two private interceptor functions can be captured from its
+  `interceptors.request.use`/`interceptors.response.use` mock calls and
+  invoked directly.
 
 - `src/modules/auth/login/useLogin.spec.tsx`, `useRegister.spec.tsx`,
   `useLogout.spec.tsx` (added 2026-08-25) — the three auth mutation hooks

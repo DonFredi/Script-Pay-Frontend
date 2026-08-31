@@ -69,7 +69,11 @@ Every subsequent request (api-client.ts)
     - on 401 (not already retried, not the /auth/refresh call itself):
         queue concurrent requests behind one in-flight refresh
         POST /auth/refresh → new access token → setAccessToken() → retry queued + original
-    - on refresh failure: clear access token (logout), reject
+    - on refresh failure (refresh call rejects, OR resolves 200 with accessToken: null —
+      the backend's "no valid session" shape, see docs/decisions.md entry 9):
+        clear access token, reject queued + original, dispatch window "auth:session-expired"
+    - AuthProvider listens for "auth:session-expired" → clearSession() → isAuthenticated
+      flips false → ProtectedLayout's own effect redirects to /auth/login
 
 Edge middleware (middleware.ts), before any protected page renders:
   - no access_token AND no refresh_token → redirect to /auth/login
@@ -137,6 +141,13 @@ src/
 ├── config/               env schema (client/server split), site config
 └── middleware.ts         Edge-runtime JWT verification for route protection
 ```
+
+The dashboard shell (`components/ui/sidebar.tsx`, used by both `(client)` and
+`admin` layouts via `AppSidebar`) is pinned open and non-toggleable at the
+`lg` breakpoint (1024px) and up (`useIsLargeScreen` in `hooks/use-mobile.ts`)
+— only tablet (collapsible off-canvas panel) and mobile (`Sheet` overlay,
+`useIsMobile` at 768px) keep the toggle, matching common dashboard
+convention. `SiteHeader`'s `SidebarTrigger` is hidden at `lg:` accordingly.
 
 Two corrections to the tree above, both verified against source on 2026-08-29:
 the `(client)/api-keys` route and the `modules/api-keys` feature were listed

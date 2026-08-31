@@ -115,3 +115,17 @@ and `api-client.ts`'s 401-refresh-retry interceptor are both now covered by
 `middleware.spec.ts` / `api-client.spec.ts` (see `docs/testing.md`), and a
 CI pipeline (`.github/workflows/ci.yml`, added 2026-08-25) now runs
 `tsc`/`eslint`/tests on every push and PR.
+
+- **Fixed 2026-08-31**: the 401-refresh-retry interceptor treated the
+  backend's `/auth/refresh` returning HTTP 200 with `accessToken: null` (its
+  "no valid session" response, not an error) as a successful refresh — it
+  retried the queued/original requests with no `Authorization` header, they
+  401'd again, and since `_retry` was already set the interceptor just gave
+  up with no logout and no redirect. In practice: a user's session dying
+  mid-use (not on page load, where `AuthProvider` already handled this same
+  response shape correctly) left them stuck on pages that could never load
+  data again until they manually logged out and back in. See
+  `docs/decisions.md` entry 9 for the fix — the interceptor now treats a
+  null-token refresh as a failure and dispatches `"auth:session-expired"`,
+  which `AuthProvider` uses to clear the session and let the existing
+  redirect-when-unauthenticated logic take over.

@@ -1,28 +1,40 @@
 "use client";
 
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import PageWrapper from "@/shared/components/shared/PageWrapper";
 import SectionWrapper from "@/shared/components/shared/SectionWrapper";
 import PageHeading from "@/shared/components/shared/PageHeading";
 import { P } from "@/shared/components/ui/Typography";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { listAuditLogs } from "@/modules/admin/audit-logs.api";
 import { useTenants } from "@/modules/admin/useTenants";
 
 /**
- * Didn't exist before — the second of two admin nav links pointing at a 404.
- *
  * Optionally scoped to one tenant via ?tenantId= — AdminTenantDetailPage deep-links
  * here so platform staff can jump straight into a tenant's own audit trail during
  * incident response instead of scanning the full cross-tenant list.
+ *
+ * The Select below mirrors AdminTransactionsPage's tenant picker, but unlike
+ * GET /v1/transactions, GET /v1/audit-logs doesn't require a tenantId for
+ * SUPER_ADMIN callers — so "All tenants" is a valid default here rather than an
+ * empty state the picker has to fill in, and there's no auto-select-first-tenant effect.
  */
+const ALL_TENANTS_VALUE = "__all__";
+
 export default function AdminAuditLogsPage() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const tenantId = searchParams.get("tenantId") ?? undefined;
   const { data: tenants } = useTenants();
   const tenantName = tenantId ? (tenants?.find((t) => t.id === tenantId)?.name ?? tenantId) : null;
+
+  function handleTenantChange(value: string) {
+    const normalized = value === ALL_TENANTS_VALUE ? undefined : value;
+    router.replace(normalized ? `/admin/audit-logs?tenantId=${normalized}` : "/admin/audit-logs");
+  }
 
   const { data: logs, isLoading, error } = useQuery({
     queryKey: ["admin", "audit-logs", tenantId],
@@ -42,12 +54,21 @@ export default function AdminAuditLogsPage() {
               ? "Every sensitive action and M-Pesa interaction for this tenant."
               : "Every sensitive action and M-Pesa interaction across the platform."}
           </P>
-          {tenantName && (
-            <Link href="/admin/audit-logs" className="text-sm text-muted-foreground underline">
-              Clear filter — show all tenants
-            </Link>
-          )}
         </div>
+
+        <Select value={tenantId ?? ALL_TENANTS_VALUE} onValueChange={handleTenantChange}>
+          <SelectTrigger className="w-64">
+            <SelectValue placeholder="All tenants" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ALL_TENANTS_VALUE}>All tenants</SelectItem>
+            {tenants?.map((tenant) => (
+              <SelectItem key={tenant.id} value={tenant.id}>
+                {tenant.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
         {isLoading && <P className="text-muted-foreground">Loading…</P>}
         {error && <P className="text-destructive">Could not load audit logs.</P>}

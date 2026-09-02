@@ -185,6 +185,18 @@ const responseInterceptorError = async (error: AxiosError<BackendErrorBody>) => 
     authBreadcrumbs("Token refresh started");
     const res = await apiPrivate.post("/auth/refresh", {});
     const newAccessToken = res.data.payload?.accessToken ?? null;
+
+    // The backend returns HTTP 200 with `accessToken: null` when the refresh
+    // cookie is missing/expired/revoked (see AuthProvider's rehydrateSession) —
+    // that's a dead session, not a successful refresh. Without this check, the
+    // code below retried every queued request with no Authorization header:
+    // they'd 401 again, but _retry was already set, so they just failed
+    // silently with no logout and no way to recover short of the user manually
+    // logging out and back in.
+    if (!newAccessToken) {
+      throw new Error("Session expired: refresh returned no access token");
+    }
+
     authBreadcrumbs("Token refresh successful");
 
     // save new token
@@ -206,6 +218,12 @@ const responseInterceptorError = async (error: AxiosError<BackendErrorBody>) => 
     // the refresh they were waiting on will never succeed now.
     refreshQueue.forEach((cb) => cb(refreshError));
     refreshQueue = [];
+    // Tell the rest of the app the session is definitively dead, so it can log
+    // out and redirect instead of leaving the user stuck on a page that looks
+    // logged-in but can never load data again without a manual logout/login.
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("auth:session-expired"));
+    }
     return Promise.reject(refreshError);
   } finally {
     isRefreshing = false;

@@ -18,6 +18,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useTenant, useUpdateTenantStatus } from "@/modules/admin/useTenants";
+import { useTenantShortcodes } from "@/modules/tenants/useTenantShortcodes";
 import type { TenantStatus } from "@/modules/admin/tenants.api";
 
 const STATUS_OPTIONS: TenantStatus[] = ["active", "suspended", "pending_kyc", "removed"];
@@ -31,6 +32,7 @@ const STATUS_OPTIONS: TenantStatus[] = ["active", "suspended", "pending_kyc", "r
  */
 export function AdminTenantDetailPage({ tenantId }: { tenantId: string }) {
   const { data: tenant, isLoading, error } = useTenant(tenantId);
+  const { data: shortcodes } = useTenantShortcodes(tenantId);
   const updateStatus = useUpdateTenantStatus(tenantId);
   const [confirmRemoveOpen, setConfirmRemoveOpen] = useState(false);
 
@@ -75,8 +77,12 @@ export function AdminTenantDetailPage({ tenantId }: { tenantId: string }) {
           <>
             <dl className="grid grid-cols-2 gap-x-6 gap-y-4 max-w-md">
               <div>
-                <dt className="text-xs text-muted-foreground">Shortcode</dt>
-                <dd className="font-medium">{tenant.businessShortcode}</dd>
+                <dt className="text-xs text-muted-foreground">Shortcodes</dt>
+                <dd className="font-medium">
+                  {shortcodes && shortcodes.length > 0
+                    ? shortcodes.map((sc) => `${sc.shortcode} (${sc.type})`).join(", ")
+                    : "None configured"}
+                </dd>
               </div>
               <div>
                 <dt className="text-xs text-muted-foreground">Onboarded</dt>

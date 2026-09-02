@@ -5,7 +5,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { MenuIcon } from "lucide-react";
 import { Slot } from "radix-ui";
 
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useIsLargeScreen, useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/shared/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -56,12 +56,19 @@ function SidebarProvider({
   onOpenChange?: (open: boolean) => void;
 }) {
   const isMobile = useIsMobile();
+  const isLargeScreen = useIsLargeScreen();
   const [openMobile, setOpenMobile] = React.useState(false);
 
   // This is the internal state of the sidebar.
   // We use openProp and setOpenProp for control from outside the component.
   const [_open, _setOpen] = React.useState(defaultOpen);
-  const open = openProp ?? _open;
+  const rawOpen = openProp ?? _open;
+  // Large screens keep the sidebar pinned open regardless of a stale collapsed
+  // cookie from a previous, smaller viewport — derived here rather than
+  // synced back into state, so there's no render-then-correct flash and no
+  // setState-in-effect. Toggling is only meaningful on tablet/mobile, where
+  // the sidebar takes up space that matters.
+  const open = isLargeScreen ? true : rawOpen;
   const setOpen = React.useCallback(
     (value: boolean | ((value: boolean) => boolean)) => {
       const openState = typeof value === "function" ? value(open) : value;
@@ -77,10 +84,13 @@ function SidebarProvider({
     [setOpenProp, open],
   );
 
-  // Helper to toggle the sidebar.
+  // Helper to toggle the sidebar. No-op on large screens — the sidebar isn't
+  // toggleable there (see `open` above), only on tablet (offcanvas) and
+  // mobile (the Sheet overlay).
   const toggleSidebar = React.useCallback(() => {
+    if (isLargeScreen) return;
     return isMobile ? setOpenMobile((open) => !open) : setOpen((open) => !open);
-  }, [isMobile, setOpen, setOpenMobile]);
+  }, [isMobile, isLargeScreen, setOpen, setOpenMobile]);
 
   // Adds a keyboard shortcut to toggle the sidebar.
   React.useEffect(() => {
@@ -188,7 +198,7 @@ function Sidebar({
 
   return (
     <div
-      className="group peer hidden text-sidebar-foreground md:block"
+      className="group peer hidden text-sidebar-foreground md:block print:hidden"
       data-state={state}
       data-collapsible={state === "collapsed" ? collapsible : ""}
       data-variant={variant}

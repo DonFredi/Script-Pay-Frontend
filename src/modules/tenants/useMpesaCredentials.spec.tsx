@@ -27,17 +27,15 @@ describe("useSetMpesaCredentials", () => {
 
     act(() =>
       result.current.mutate({
-        businessShortcode: "123456",
         consumerKey: "ck",
         consumerSecret: "cs",
-        passkey: "pk",
       }),
     );
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(mockSetMpesaCredentials).toHaveBeenCalledWith(
       "tenant-1",
-      expect.objectContaining({ businessShortcode: "123456" }),
+      expect.objectContaining({ consumerKey: "ck" }),
     );
     expect(toast.success).toHaveBeenCalledWith("M-Pesa credentials saved");
   });
@@ -48,10 +46,8 @@ describe("useSetMpesaCredentials", () => {
 
     act(() =>
       result.current.mutate({
-        businessShortcode: "123456",
         consumerKey: "ck",
         consumerSecret: "bad",
-        passkey: "pk",
       }),
     );
 

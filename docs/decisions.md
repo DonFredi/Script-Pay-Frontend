@@ -186,3 +186,34 @@ requiring separate label/link env vars. This is deliberately scoped to
 *branding* only — it does not attempt to extract shared code (the Daraja
 client, the auth/CSRF pattern) into reusable packages, which is a larger,
 separate change that isn't justified until a second real deployment exists.
+
+## 9. A refresh that returns HTTP 200 with no access token is treated as a failure, and the app is told about it
+
+**Problem**: The backend's `/auth/refresh` returns HTTP 200 with `{ accessToken:
+null }` when the refresh cookie is missing/expired/revoked — not an HTTP
+error (see `AuthProvider.tsx`'s `rehydrateSession`, which already handles
+this correctly on mount). `api-client.ts`'s 401-retry interceptor did not:
+it unconditionally treated any 200 response from `/auth/refresh` as a
+successful refresh, called `setAccessToken(newAccessToken)` with `null`, and
+retried every queued request with no `Authorization` header. Those requests
+just 401'd again, but `_retry` was already set on them, so the interceptor
+gave up silently — no logout, no redirect, nothing telling the rest of the
+app the session was dead. The user was left on a page that looked logged in
+but could never load data again, with no recovery short of manually logging
+out and back in. This was a real, reported bug (transactions page unusable,
+"refresh token" errors mid-session).
+
+**Rejected**: Leaving `AuthProvider`'s mount-time rehydration as the only
+place that treats a null `accessToken` as "not logged in," since that path
+only runs once on page load and never re-fires for a token that dies
+mid-session.
+
+**Chosen**: The interceptor now throws when `/auth/refresh` returns no
+`accessToken`, routing it through the same failure handling a rejected
+refresh call already has (clear the token, reject the queue). On any
+definitive refresh failure — this new case or the pre-existing one — it also
+dispatches a `window` `"auth:session-expired"` event, since `api-client.ts`
+has no access to React context to call `clearSession()` directly.
+`AuthProvider` listens for that event and calls `clearSession()`, which flips
+`isAuthenticated` to `false`; `ProtectedLayout`'s existing redirect effect
+then sends the user to `/auth/login` on its own, without a manual logout.

@@ -1,15 +1,20 @@
 "use client";
 
 import { useTenant } from "@/modules/admin/useTenants";
+import { useTenantShortcodes } from "@/modules/tenants/useTenantShortcodes";
 import { P } from "@/shared/components/ui/Typography";
 
 /**
  * GET /v1/tenants/:id has no @Roles() guard — a tenant viewing their own
  * tenantId is allowed, same as TransactionDetailPage's receipt business-name
  * lookup — so this reuses that hook rather than needing a separate endpoint.
+ * Shortcodes are a separate call (useTenantShortcodes, no tenantId — self-service
+ * resolves to the caller's own tenant) since Tenant.businessShortcode no longer
+ * exists: a tenant can hold any number of Till/Paybill/B2C shortcodes now.
  */
 export function BusinessDetailsCard({ tenantId }: { tenantId: string }) {
   const { data: tenant, isLoading, error } = useTenant(tenantId);
+  const { data: shortcodes } = useTenantShortcodes();
 
   return (
     <div className="rounded-lg border bg-card p-6">
@@ -23,8 +28,12 @@ export function BusinessDetailsCard({ tenantId }: { tenantId: string }) {
             <dd>{tenant.name}</dd>
           </div>
           <div>
-            <dt className="text-xs text-muted-foreground">Paybill / Till number</dt>
-            <dd>{tenant.businessShortcode}</dd>
+            <dt className="text-xs text-muted-foreground">Shortcodes</dt>
+            <dd>
+              {shortcodes && shortcodes.length > 0
+                ? shortcodes.map((sc) => `${sc.shortcode} (${sc.type})`).join(", ")
+                : "None configured"}
+            </dd>
           </div>
           <div>
             <dt className="text-xs text-muted-foreground">Status</dt>

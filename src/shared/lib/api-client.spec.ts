@@ -284,6 +284,32 @@ describe("api-client response interceptor — 401 refresh/retry", () => {
     expect(fakeApi).not.toHaveBeenCalled();
   });
 
+  it("treats a 200 refresh with no accessToken as a failure instead of retrying with no auth header", async () => {
+    setAccessToken("stale-token");
+    fakeApiPrivate.post.mockResolvedValue({ data: { payload: { accessToken: null } } });
+
+    const originalRequest: RequestConfig = { url: "/transactions", method: "get" };
+    const error = makeError({ response: { status: 401 }, config: originalRequest });
+
+    await expect(responseInterceptorError(error)).rejects.toThrow("Session expired");
+    expect(getAccessToken()).toBeNull();
+    expect(fakeApi).not.toHaveBeenCalled();
+  });
+
+  it("dispatches auth:session-expired when refresh definitively fails, so the app can log out", async () => {
+    const handler = jest.fn();
+    window.addEventListener("auth:session-expired", handler);
+
+    fakeApiPrivate.post.mockRejectedValue(new Error("refresh failed"));
+    const originalRequest: RequestConfig = { url: "/transactions", method: "get" };
+    const error = makeError({ response: { status: 401 }, config: originalRequest });
+
+    await expect(responseInterceptorError(error)).rejects.toThrow("refresh failed");
+    expect(handler).toHaveBeenCalledTimes(1);
+
+    window.removeEventListener("auth:session-expired", handler);
+  });
+
   it("allows a fresh refresh attempt after a previous refresh failure (isRefreshing is released)", async () => {
     fakeApiPrivate.post.mockRejectedValueOnce(new Error("first refresh failed"));
     const firstRequest: RequestConfig = { url: "/transactions", method: "get" };

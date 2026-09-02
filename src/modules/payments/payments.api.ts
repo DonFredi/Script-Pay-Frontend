@@ -25,6 +25,11 @@ export const initiateStkPush = async (data: InitiateStkPushRequest): Promise<Ini
 };
 
 export interface InitiateB2cRequest {
+  // Which of the tenant's B2C-enabled shortcodes pays out — required, never
+  // defaulted, since it's the one draining the tenant's balance. See
+  // B2cPayoutSection: auto-selected when the tenant has exactly one, otherwise
+  // the caller must choose.
+  shortcodeId: string;
   msisdn: string; // the PAYEE — this is money going out
   amountMinorUnits: number;
   remarks: string;

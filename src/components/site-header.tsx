@@ -28,9 +28,11 @@ export function SiteHeader() {
     activeItem && pathname.length > activeItem.url.length ? pathname.slice(activeItem.url.length + 1) : null;
 
   return (
-    <header className="flex shrink-0 items-center gap-2 py-3">
+    <header className="flex shrink-0 items-center gap-2 py-3 print:hidden">
       <div className="flex w-full items-center gap-1 px-4 lg:gap-2 lg:px-6">
-        <SidebarTrigger className="-ml-1" />
+        {/* Hidden at lg+ — the sidebar is pinned open on large screens and isn't
+            toggleable there; the trigger only makes sense on tablet/mobile. */}
+        <SidebarTrigger className="-ml-1 lg:hidden" />
         <Separator orientation="vertical" className="mx-2 data-[orientation=vertical]:h-4" />
         <Breadcrumb>
           <BreadcrumbList>

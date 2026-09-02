@@ -7,7 +7,6 @@ export type TenantStatus = "active" | "suspended" | "pending_kyc" | "removed";
 export interface Tenant {
   id: string;
   name: string;
-  businessShortcode: string;
   status: string;
   createdAt: string;
   mpesaCredentialsConfiguredAt?: string | null;

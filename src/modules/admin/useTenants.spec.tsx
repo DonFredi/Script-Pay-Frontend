@@ -22,7 +22,6 @@ const mockUpdateTenantStatus = updateTenantStatus as jest.Mock;
 const mockTenant: Tenant = {
   id: "tenant-1",
   name: "Acme",
-  businessShortcode: "123456",
   status: "active",
   createdAt: "2026-08-25T00:00:00.000Z",
 };

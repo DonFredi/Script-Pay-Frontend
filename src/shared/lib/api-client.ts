@@ -158,8 +158,23 @@ const responseInterceptorError = async (error: AxiosError<BackendErrorBody>) => 
     return Promise.reject(error);
   }
 
-  // do not refresh on refresh endpoint itself
-  if (originalRequest.url?.includes("/auth/refresh")) {
+  // Never attempt a refresh for a 401 from an /auth/* route. None of them are
+  // behind AccessTokenGuard, so a 401 there is the endpoint rejecting the
+  // CREDENTIALS it was given — it never means "your access token expired", which
+  // is the only thing refreshing can fix.
+  //
+  // This used to exclude only /auth/refresh, and the gap was user-visible: a
+  // wrong password returned 401 "Invalid email or password", the interceptor
+  // treated it as an expired session, called /auth/refresh, got
+  // { accessToken: null } because a logged-out visitor has no refresh cookie,
+  // and threw "Session expired: refresh returned no access token" — replacing
+  // the real reason and firing auth:session-expired at someone who was never
+  // signed in. /auth/reset-password and /auth/verify-email hit the same trap:
+  // both answer an invalid or expired link with 401.
+  //
+  // /profile is deliberately NOT in scope — it IS AccessTokenGuard-protected, so
+  // a 401 there genuinely does mean the token expired and must still refresh.
+  if (originalRequest.url?.startsWith("/auth/")) {
     return Promise.reject(error);
   }
 

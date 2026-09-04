@@ -215,6 +215,34 @@ describe("api-client response interceptor — 401 refresh/retry", () => {
     expect(fakeApiPrivate.post).not.toHaveBeenCalled();
   });
 
+  // A 401 from an /auth/* route means the endpoint rejected the credentials it
+  // was handed, not that an access token expired — and refreshing cannot fix
+  // that. Attempting it swapped the real reason for a session error: a wrong
+  // password produced "Session expired: refresh returned no access token"
+  // (refresh answers a cookie-less visitor with accessToken: null) and fired
+  // auth:session-expired at someone who had never signed in.
+  it.each(["/auth/login", "/auth/signup", "/auth/reset-password", "/auth/verify-email"])(
+    "rejects a 401 from %s with the original error instead of refreshing",
+    async (url) => {
+      const error = makeError({ response: { status: 401 }, config: { url, method: "post" } });
+
+      await expect(responseInterceptorError(error)).rejects.toBe(error);
+      expect(fakeApiPrivate.post).not.toHaveBeenCalled();
+    },
+  );
+
+  // The counterpart: /profile IS AccessTokenGuard-protected, so a 401 there
+  // really does mean the token expired and must still trigger a refresh.
+  it("still refreshes on a 401 from a guarded route like /profile", async () => {
+    fakeApiPrivate.post.mockResolvedValue({ data: { payload: { accessToken: "new-token" } } });
+    fakeApi.mockResolvedValue({ data: "retried-ok" });
+
+    const error = makeError({ response: { status: 401 }, config: { url: "/profile", method: "get" } });
+    await responseInterceptorError(error);
+
+    expect(fakeApiPrivate.post).toHaveBeenCalledWith("/auth/refresh", {});
+  });
+
   it("does not retry a request that has already been retried once", async () => {
     const error = makeError({ response: { status: 401 }, config: { url: "/transactions", method: "get", _retry: true } });
     await expect(responseInterceptorError(error)).rejects.toBe(error);

@@ -248,3 +248,35 @@ destination at **build** time, so changing the env var alone does nothing.
 The general rule: a `NEXT_PUBLIC_*` value is in the browser bundle by
 definition, so Config is the honest type for all of them. Typing one Secret buys
 no protection and costs a delete-and-recreate cycle later.
+
+## 11. `sendDefaultPii` turned off in all three Sentry runtimes
+
+**Problem**: `sendDefaultPii: true` was set in `instrumentation-client.ts`,
+`sentry.server.config.ts` and `sentry.edge.config.ts`. That is the Sentry Next.js
+wizard's scaffold default — all three files still carried its generated comment
+verbatim, so this was an unreviewed default rather than a decision.
+
+On this app it is the wrong default. `sendDefaultPii` tells Sentry to attach
+request headers, request bodies and IP addresses to events. The headers include
+the httpOnly `access_token` and `refresh_token` cookies this app's whole auth
+model depends on, and the bodies include payment requests carrying `msisdn` and
+amount. The edge config is the worst of the three: `middleware.ts` runs on every
+protected route and exists precisely to read those auth cookies.
+
+This directly contradicted the care taken two files away. `api-client.ts`'s
+`scrubErrorDataForSentry` goes out of its way to send validation field *names*
+only and never the submitted values, with a comment explaining that payment
+requests carry PII/financial data for a Kenyan M-Pesa platform — and then
+`sendDefaultPii: true` handed Sentry the same class of data through the back
+door, along with the session cookies.
+
+**Chosen**: `sendDefaultPii: false` in all three, each carrying the reasoning so
+a future `npx @sentry/wizard` run doesn't quietly restore the default. The
+backend's `Sentry.init` in `main.ts` has always had it off and says why; this
+brings the frontend in line with the repo it talks to.
+
+**Cost, accepted**: Sentry events no longer carry the user's IP or automatic user
+context. Nothing in this app set Sentry user context anyway, and for a payment
+dashboard the identifying data is the part worth losing. An event still carries
+the endpoint, method, status code and which fields failed validation — which is
+what the scrubbing in `api-client.ts` already decided was the useful, safe subset.

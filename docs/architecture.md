@@ -236,6 +236,17 @@ Kenyan M-Pesa platform. Only the generic message, status code, and *which
 field names* failed validation are sent — never the submitted values. 401/403
 responses are not reported at all (expected, not exceptional).
 
+`sendDefaultPii` is **off** in all three Sentry runtimes
+(`instrumentation-client.ts`, `sentry.server.config.ts`,
+`sentry.edge.config.ts`). It was `true` — the wizard's scaffold default — which
+attaches request headers, bodies and IP addresses to every event: on this app
+that means the httpOnly `access_token`/`refresh_token` cookies and payment
+bodies carrying `msisdn` and amount, handed to Sentry through the back door
+while the interceptor above was carefully keeping them out. The edge runtime
+mattered most, since `middleware.ts` runs on every protected route and exists to
+read exactly those cookies. See `docs/decisions.md` entry 11; the backend's own
+`Sentry.init` has always had it off for the same reason.
+
 ## Testing
 
 `npx tsc --noEmit` and `npx eslint .` always work. Running `jest` locally on

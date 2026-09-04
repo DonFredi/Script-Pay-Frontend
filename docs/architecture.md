@@ -180,6 +180,34 @@ Related consequences worth knowing before touching these views:
 - A successful payout POST means Safaricom accepted the request into its queue,
   not that money moved. The form reports `PROCESSING` and polls.
 
+### Money-form invariants
+
+Three rules the payment forms enforce that are easy to undo by accident:
+
+- **Amounts are whole shillings.** Both schemas reject a fractional value.
+  M-Pesa has no sub-shilling denomination, so `1.50` became 150 minor units and
+  Safaricom charged the rounded **KES 2** while the ledger recorded KES 1.50.
+  The backend now rejects a non-multiple of 100 outright; the field check exists
+  so the merchant sees why, rather than getting a 400 after pressing send.
+- **Both submit buttons disable while in flight.** The payout form always did;
+  the STK form did not — and unlike a payout it carries no idempotency key, so a
+  double-click sent the customer *two* PIN prompts for one purchase, either of
+  which they could pay.
+- **Polling gives up after five minutes** (`usePollTransactionStatus`,
+  `MAX_POLL_DURATION_MS`) and reports `hasStoppedPolling`. It previously polled
+  every 2.5s indefinitely on a transaction that never reached a terminal state —
+  which is exactly what happens whenever a Daraja callback goes unprocessed, so
+  not hypothetical. The payout copy on giving up says **do not resend**: the
+  funds are still reserved at that point and the idempotency key has already
+  rotated, so a resend would be a second real disbursement.
+
+State in these components is adjusted **during render** (the `prev*` comparison
+pattern), not in an Effect. That is React's recommended approach for state
+derived from a changing value, and this repo's React Compiler lint rules reject
+`setState` inside an effect body outright — as well as `Date.now()` on the
+render path, which is why the STK form's "still waiting" nudge is keyed on a
+counter rather than a timestamp.
+
 ## Environment: why client/server env schemas are split
 
 `src/config/env/clientEnv.ts` validates only `NEXT_PUBLIC_*` browser-safe

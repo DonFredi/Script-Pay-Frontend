@@ -217,3 +217,34 @@ has no access to React context to call `clearSession()` directly.
 `AuthProvider` listens for that event and calls `clearSession()`, which flips
 `isAuthenticated` to `false`; `ProtectedLayout`'s existing redirect effect
 then sends the user to `/auth/login` on its own, without a manual logout.
+
+## 10. `NEXT_PUBLIC_SENTRY_DSN` is optional, and typed Config rather than Secret in Vercel
+
+**Problem, part one**: `clientEnv.ts` declared it as `z.url()` — required. A
+deployment without a Sentry DSN therefore threw at module load, and because
+`config/client.ts` imports `clientEnv`, and the api client and every branded
+surface import `clientConfig`, that took down the **entire client app**. A
+missing error-*reporting* credential should disable error reporting, not the
+product. `serverEnv.ts` already got this right, and its own comment explains why
+it must never throw; the client schema had drifted from that reasoning.
+
+Now `z.preprocess((v) => (v === "" ? undefined : v), z.url().optional())` —
+matching the empty-string handling the branding vars already use, since Next
+loads an unset-but-present var as `""` rather than `undefined`. `Sentry.init()`
+with an undefined DSN is a documented no-op.
+
+**Problem, part two**, found while repointing `NEXT_PUBLIC_API_URL` at the new
+backend: Vercel refuses to save a `NEXT_PUBLIC_`-prefixed variable typed as
+**Secret**, and will not let you convert an existing secret to **Config**
+("saved secrets are write-only"). The only path is delete-and-recreate as
+Config.
+
+That deserves care rather than a quick click: `clientEnv.ts` *requires*
+`NEXT_PUBLIC_API_URL`, so a deploy triggered between the delete and the re-add
+fails the build outright. Do both, then redeploy — and note the redeploy is
+mandatory regardless, because `next.config.ts` bakes this value into the rewrite
+destination at **build** time, so changing the env var alone does nothing.
+
+The general rule: a `NEXT_PUBLIC_*` value is in the browser bundle by
+definition, so Config is the honest type for all of them. Typing one Secret buys
+no protection and costs a delete-and-recreate cycle later.

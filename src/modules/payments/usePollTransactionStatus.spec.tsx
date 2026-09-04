@@ -116,6 +116,33 @@ describe("usePollTransactionStatus", () => {
       // sign of anything hanging.
     }, 60_000);
 
+    // The hook mirrors react-query's own dataUpdateCount to drive the give-up
+    // flag, and that mirror has to be reset per transaction. Without this, a
+    // merchant taking a second payment on the same form would inherit the first
+    // one's exhausted count and see "we've stopped checking" immediately.
+    it("starts a fresh count when the transaction id changes", async () => {
+      mockGetStatus.mockResolvedValue(makeTx("PROCESSING"));
+
+      // One QueryClient for the whole test: the shared `wrapper` above builds a
+      // new one per render, which would throw away the cache across a rerender.
+      const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+      const stableWrapper = ({ children }: { children: React.ReactNode }) => (
+        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      );
+
+      const { result, rerender } = renderHook(({ id }) => usePollTransactionStatus(id), {
+        wrapper: stableWrapper,
+        initialProps: { id: "tx-1" as string | null },
+      });
+
+      await waitFor(() => expect(result.current.data?.status).toBe("PROCESSING"));
+
+      rerender({ id: "tx-2" });
+
+      await waitFor(() => expect(mockGetStatus).toHaveBeenCalledWith("tx-2"));
+      expect(result.current.hasStoppedPolling).toBe(false);
+    });
+
     it("does not report giving up on a transaction that settled normally", async () => {
       mockGetStatus.mockResolvedValue(makeTx("SETTLED"));
 

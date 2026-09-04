@@ -17,6 +17,14 @@ export const b2cSchema = z.object({
     .min(1, "Amount is required")
     .refine((value) => !isNaN(Number(value)), { message: "Amount must be a number" })
     .refine((value) => Number(value) > 0, { message: "Amount must be greater than 0" })
+    // Whole shillings only, same as the collection path — and it matters more here:
+    // a payout of "1.50" reserved and debited KES 1.50 against the tenant while
+    // Safaricom actually sent the rounded KES 2, leaving them under-debited for money
+    // that genuinely left their shortcode. The backend rejects it outright now
+    // (initiate-b2c.dto.ts); this catches it at the field first.
+    .refine((value) => Number.isInteger(Number(value)), {
+      message: "Enter a whole number of shillings — M-Pesa doesn't handle cents",
+    })
     // The backend caps a single payout at KES 250,000. Checked here too so an obvious
     // over-limit typo is caught before it reaches Safaricom, not as a substitute for
     // the server check.

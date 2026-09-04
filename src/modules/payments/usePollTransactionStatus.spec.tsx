@@ -1,6 +1,6 @@
 import { renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { usePollTransactionStatus } from "./usePollTransactionStatus";
+import { usePollTransactionStatus, MAX_POLL_DURATION_MS, POLL_INTERVAL_MS } from "./usePollTransactionStatus";
 import { getTransactionStatus } from "./payments.api";
 import type Transaction from "@/types";
 
@@ -87,4 +87,44 @@ describe("usePollTransactionStatus", () => {
       await waitFor(() => expect(mockGetStatus).toHaveBeenCalledTimes(3));
     },
   );
+
+  // Without a ceiling, a transaction that never reaches a terminal state is polled
+  // every 2.5s for as long as the tab stays open. That is exactly what happens today
+  // whenever a Daraja callback goes unprocessed, so it is not a hypothetical.
+  describe("giving up on a transaction that never resolves", () => {
+    it("stops polling after the maximum duration and reports that it stopped", async () => {
+      mockGetStatus.mockResolvedValue(makeTx("PROCESSING"));
+
+      const { result } = renderHook(() => usePollTransactionStatus("tx-1"), { wrapper });
+
+      await waitFor(() => expect(result.current.data?.status).toBe("PROCESSING"));
+      expect(result.current.hasStoppedPolling).toBe(false);
+
+      // Run past the ceiling, with slack so the final scheduled poll lands.
+      await jest.advanceTimersByTimeAsync(MAX_POLL_DURATION_MS + POLL_INTERVAL_MS * 2);
+      await waitFor(() => expect(result.current.hasStoppedPolling).toBe(true));
+
+      const callsAtGiveUp = mockGetStatus.mock.calls.length;
+      await jest.advanceTimersByTimeAsync(POLL_INTERVAL_MS * 10);
+      expect(mockGetStatus).toHaveBeenCalledTimes(callsAtGiveUp);
+      // Sanity-check the ceiling actually bounded things, rather than the test
+      // passing because polling broke for some unrelated reason.
+      expect(callsAtGiveUp).toBeGreaterThan(50);
+      expect(callsAtGiveUp).toBeLessThanOrEqual(MAX_POLL_DURATION_MS / POLL_INTERVAL_MS + 2);
+      // Driving five simulated minutes means ~120 sequential poll cycles, each with
+      // its own promise flush — genuinely slower than jest's 5s default, and not a
+      // sign of anything hanging.
+    }, 60_000);
+
+    it("does not report giving up on a transaction that settled normally", async () => {
+      mockGetStatus.mockResolvedValue(makeTx("SETTLED"));
+
+      const { result } = renderHook(() => usePollTransactionStatus("tx-1"), { wrapper });
+
+      await waitFor(() => expect(result.current.data?.status).toBe("SETTLED"));
+      await jest.advanceTimersByTimeAsync(MAX_POLL_DURATION_MS * 2);
+
+      expect(result.current.hasStoppedPolling).toBe(false);
+    });
+  });
 });

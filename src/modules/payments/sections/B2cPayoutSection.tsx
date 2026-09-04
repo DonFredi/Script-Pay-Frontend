@@ -57,7 +57,7 @@ const B2cPayoutSection = () => {
     formState: { errors, isSubmitting },
   } = useForm<B2cFormData>({ resolver: zodResolver(b2cSchema) });
 
-  const { data: polledTransaction } = usePollTransactionStatus(activeTransactionId);
+  const { data: polledTransaction, hasStoppedPolling } = usePollTransactionStatus(activeTransactionId);
   const { data: balance, refetch: refetchBalance } = useBalance();
 
   // Which of the tenant's shortcodes this payout draws from — required by the
@@ -76,6 +76,7 @@ const B2cPayoutSection = () => {
     const timeout = setTimeout(() => setMessage(""), 6000);
     return () => clearTimeout(timeout);
   }, [status]);
+
 
   // Adjusted during render rather than in an Effect, matching StkPushSection — a new
   // poll result lands in the same commit instead of costing an extra render pass.
@@ -103,6 +104,27 @@ const B2cPayoutSection = () => {
       } else {
         setStatus("pending");
       }
+    }
+  }
+
+  // Polling gave up with the payout still unresolved. Worded more carefully than the
+  // collection side: the funds are still RESERVED at this point (only Safaricom's
+  // result callback discharges or releases the reservation), so the merchant must not
+  // read this as "nothing happened" and send the payout again — the idempotency key
+  // has already rotated, so a resend would be a second real disbursement.
+  // Adjusted during render, matching the block above.
+  const [prevStoppedPolling, setPrevStoppedPolling] = useState(hasStoppedPolling);
+  if (hasStoppedPolling !== prevStoppedPolling) {
+    setPrevStoppedPolling(hasStoppedPolling);
+
+    if (hasStoppedPolling && activeTransactionId) {
+      setStatus("idle");
+      setMessage(
+        "Still unconfirmed after 5 minutes. The funds remain held while Safaricom finishes processing — do not resend. " +
+          "This payout will resolve on its own and appear in Transactions.",
+      );
+      setActiveTransactionId(null);
+      refetchBalance();
     }
   }
 

@@ -16,6 +16,14 @@ export const stkPushSchema = z.object({
     .refine((value) => Number(value) > 0, {
       message: "Amount must be greater than 0",
     })
+    // M-Pesa settles in whole shillings — there is no sub-shilling denomination.
+    // Without this, "1.50" became 150 minor units, and Safaricom charged the rounded
+    // KES 2 while the ledger recorded KES 1.50. The backend now rejects any amount
+    // that isn't a multiple of 100 minor units (initiate-stk-push.dto.ts); this is
+    // the friendly half, catching it at the field rather than as a 400 after send.
+    .refine((value) => Number.isInteger(Number(value)), {
+      message: "Enter a whole number of shillings — M-Pesa doesn't handle cents",
+    })
     // STK Push (Lipa na M-Pesa Online) is commonly documented as capped at KES
     // 150,000/transaction — lower than B2C's 250,000 (see b2c.schema.ts), since
     // Safaricom tariffs the two separately. Same role as that check: an obvious

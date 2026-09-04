@@ -20,7 +20,14 @@ const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]),
   NEXT_PUBLIC_API_URL: z.url(),
   NEXT_PUBLIC_SITE_URL: z.url(),
-  NEXT_PUBLIC_SENTRY_DSN: z.url(),
+  // Optional, matching how serverEnv.ts already treats its own Sentry vars — and for
+  // the same reason that file records: a missing error-REPORTING credential should
+  // disable error reporting, not take the app down. Required here, this threw at
+  // module load on any deployment without a DSN, and clientEnv is imported by
+  // config/client.ts, which the api client and every branded surface import in turn.
+  // Sentry.init() with an undefined dsn is a documented no-op, which is the correct
+  // degradation.
+  NEXT_PUBLIC_SENTRY_DSN: z.preprocess((v) => (v === "" ? undefined : v), z.url().optional()),
 
   NEXT_PUBLIC_SITE_NAME: optionalWithDefault("Script Pay"),
   NEXT_PUBLIC_SITE_DESCRIPTION: optionalWithDefault("Online M-Pesa payments for businesses"),

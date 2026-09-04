@@ -37,16 +37,22 @@ const StkPushSection = () => {
   const [status, setStatus] = useState<StatusType>("idle");
   const [message, setMessage] = useState("");
   const [activeTransactionId, setActiveTransactionId] = useState<string | null>(null);
+  // Incremented once per submit to (re)arm the "still waiting" nudge. A counter
+  // rather than a timestamp because Date.now() is impure and can't be called on the
+  // render path; nothing here needs the actual time, only "a new attempt started".
+  // Driving the nudge from state rather than a loose setTimeout is what lets the
+  // effect below cancel it the moment the transaction resolves.
+  const [waitingNudgeNonce, setWaitingNudgeNonce] = useState(0);
   const {
     register,
     handleSubmit,
     reset,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<StkFormData>({
     resolver: zodResolver(stkPushSchema),
   });
 
-  const { data: polledTransaction } = usePollTransactionStatus(activeTransactionId);
+  const { data: polledTransaction, hasStoppedPolling } = usePollTransactionStatus(activeTransactionId);
 
   // The success/failure message is only useful for a moment — once the request
   // has resolved, leaving it on screen indefinitely just clutters the form for
@@ -57,6 +63,17 @@ const StkPushSection = () => {
     const timeout = setTimeout(() => setMessage(""), 6000);
     return () => clearTimeout(timeout);
   }, [status]);
+
+  // The "still waiting, enter your PIN" nudge. Only fires while the payment is
+  // genuinely still in flight: the cleanup cancels it as soon as the status leaves
+  // "pending", so a payment that resolves inside the ten seconds never sees it.
+  useEffect(() => {
+    if (waitingNudgeNonce === 0 || status !== "pending") return;
+    const timeout = setTimeout(() => {
+      setMessage("Still waiting... please enter your M-Pesa PIN on your phone.");
+    }, 10000);
+    return () => clearTimeout(timeout);
+  }, [waitingNudgeNonce, status]);
 
   // Adjusted directly during render (React's recommended alternative to an
   // Effect here) rather than via useEffect+setState, so a new poll result
@@ -80,6 +97,24 @@ const StkPushSection = () => {
     }
   }
 
+  // Polling gave up with the payment still unresolved. Say so and stop the spinner,
+  // rather than leaving "Awaiting confirmation..." on screen against a hook that is
+  // no longer asking. The payment isn't lost — the backend reconciles it — so this
+  // points at where the answer will actually appear. Adjusted during render for the
+  // same reason as the block above, not in an Effect.
+  const [prevStoppedPolling, setPrevStoppedPolling] = useState(hasStoppedPolling);
+  if (hasStoppedPolling !== prevStoppedPolling) {
+    setPrevStoppedPolling(hasStoppedPolling);
+
+    if (hasStoppedPolling && activeTransactionId) {
+      setStatus("idle");
+      setMessage(
+        "Still unconfirmed after 5 minutes. We've stopped checking here — this payment will resolve on its own and appear in Transactions.",
+      );
+      setActiveTransactionId(null);
+    }
+  }
+
   const handleStkPush = async (data: StkFormData) => {
     setStatus("pending");
     setMessage("Sending STK push request...");
@@ -100,10 +135,12 @@ const StkPushSection = () => {
 
       setActiveTransactionId(response.transactionId);
       setMessage("Awaiting confirmation...");
-      const waitingTimeout = setTimeout(() => {
-        setMessage("Still waiting... please enter your M-Pesa PIN on your phone.");
-      }, 10000);
-      void waitingTimeout;
+      // Tracked in state so the nudge can be CANCELLED. It used to be a bare
+      // setTimeout assigned to a `void`-ed local, which nothing could clear — so a
+      // payment that settled in two seconds still had its "Payment successful!"
+      // message overwritten eight seconds later by "Still waiting... please enter
+      // your M-Pesa PIN", telling the merchant a completed payment was stuck.
+      setWaitingNudgeNonce((n) => n + 1);
 
       reset();
     } catch (error) {
@@ -169,7 +206,15 @@ const StkPushSection = () => {
               )}
             </FieldGroup>
 
-            <Button type="submit">Send Prompt</Button>
+            {/*
+              Nothing disabled this before, and an STK push has no idempotency key
+              the way a payout does — so a double-click sent two real prompts and the
+              customer got two PIN requests for one purchase, either of which they
+              could pay. Matches B2cPayoutSection's guard, which already worked this way.
+            */}
+            <Button type="submit" disabled={isSubmitting || status === "pending"}>
+              {status === "pending" ? "Sending…" : "Send Prompt"}
+            </Button>
           </FieldSet>
           {message && <div className="text-sm p-3 rounded bg-gray-100">{message}</div>}
         </form>

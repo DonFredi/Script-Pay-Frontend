@@ -111,9 +111,12 @@ avoid" below for why that matters here specifically):
 - `docs/security.md` — session/token handling, what gets sent to Sentry
   (and what's scrubbed), what this app deliberately does not do (all real
   authorization is the backend's job).
-- `docs/testing.md` — what's actually tested today (one hook, `useAuth`),
-  the Windows Jest prerequisite, and the honest gap list (no `test` script
-  wired into `package.json` yet).
+- `docs/testing.md` — what's actually tested today (every hook/mutation
+  layer, `middleware.ts`, `api-client.ts`, and both money-moving forms), the
+  Windows Jest prerequisite, and the honest gap list (no E2E layer; most
+  rendered components untested). This bullet used to say "one hook,
+  `useAuth`" and "no `test` script wired in" — both were long out of date;
+  corrected 2026-09-05.
 
 One project-specific skill lives in `.claude/skills/`: `add-feature-module`
 (the `modules/<feature>/` file convention, wiring a new call through

@@ -186,8 +186,33 @@ regardless. Confirmed fixed: run 32869218950 passed all three jobs.
   are plain controlled `register()` fields, not anything needing realistic
   keystroke sequencing.
 
+- `src/modules/payments/sections/B2cPayoutSection.spec.tsx` (added
+  2026-09-05) — the money-*out* form, flagged as the remaining gap after the
+  pre-go-live audit: it was the only payment form without a spec, and it is
+  the riskier of the two (a bad collection costs a customer a retry; a bad
+  payout sends real money from the tenant's own balance to the wrong person,
+  possibly twice). Mirrors `StkPushSection.spec.tsx`'s setup, plus mocks for
+  `useBalance`, `useTenantShortcodes` and `useAuthContext`. Covers what only
+  lives inline here: the `TENANT_ADMIN` gate rendering `null` for anyone else,
+  phone normalization and minor-units conversion, shortcode selection when the
+  tenant has exactly one B2C shortcode (and the submit block when they have
+  none), the polled-status → UI mapping including the "funds have been
+  returned" fallback when `failureReason` is null and the "do not resend"
+  warning when polling gives up — and, with no counterpart on the collection
+  side, the idempotency key's lifecycle: held across a retry of a failed
+  payout, rotated once one is accepted. That key is the only thing between a
+  resubmitted form and a second real disbursement.
+
+  `crypto.randomUUID` is stubbed with a sequential fake (jsdom doesn't
+  reliably provide it, and a deterministic key is what makes the lifecycle
+  assertable). Key rotation is asserted through that stub's call count rather
+  than by submitting a second payout: a successful submit calls `reset()`,
+  and react-hook-form re-registers its fields asynchronously, so the first
+  field written after a reset is silently dropped — a test artifact, not a
+  component bug, and not worth encoding a workaround for.
+
 Everything else in `src/` — most components (tables, admin pages, forms
-other than `StkPushSection`), and modules with no dedicated hook
+other than the two payment sections), and modules with no dedicated hook
 (`audit-logs.api.ts`'s `listAuditLogs`, called directly from
 `app/(main)/(protected)/admin/audit-logs/page.tsx`) — has no test coverage
 yet.
@@ -251,8 +276,8 @@ runners) never hits this — it's Windows/MSVC-specific.
 
 - Every hook/mutation layer (`use*.ts` + its `*.api.ts`) across auth,
   payments, transactions, tenants, onboarding, and admin (including admin's
-  API-key oversight) now has a test, plus the one component that's the
-  actual money-movement trigger (`StkPushSection.tsx`). What's left is
+  API-key oversight) now has a test, plus both components that actually move
+  money (`StkPushSection.tsx`, `B2cPayoutSection.tsx`). What's left is
   everything else *rendered* — tables, admin pages, other forms
   (login/register/reset-password UI, tenant-status controls, admin API-key
   table). That's a real, separate effort (component/UI testing), not a

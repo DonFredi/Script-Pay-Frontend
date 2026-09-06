@@ -7,21 +7,20 @@ import z from "zod";
  *   1. Protection only kicked in after JS loaded and React rendered.
  *   2. Any Server Component data-fetching on a "protected" page would already have
  *      run on the server before a client-side redirect could ever stop it.
- * This middleware verifies the backend-issued access token directly, using the
+ * This proxy verifies the backend-issued access token directly, using the
  * SAME jose-based verification the backend uses to sign it (see
  * scriptpay-backend/src/modules/auth/token.service.ts) — this only works because
- * Approach B issues our own JWT rather than relying on Firebase's Admin SDK, which
- * cannot run on the Edge runtime at all.
+ * Approach B issues our own JWT rather than relying on Firebase's Admin SDK.
  *
  * IMPORTANT: JWT_ACCESS_SECRET here must be the EXACT SAME value as the backend's
  * JWT_ACCESS_SECRET env var — this is a shared secret between the two codebases.
- * It's validated inline (below) rather than through src/config/env/serverEnv.ts —
- * that module is intentionally loaded only in the Node.js runtime, gated behind
- * `NEXT_RUNTIME === "nodejs"` in src/instrumentation.ts, and this file runs on the
- * Edge runtime. Pulling the whole serverEnv module into the Edge bundle would be
- * an unreviewed change to code that has already caused a real prod-only Edge
- * regression once (see CLAUDE.md's proxy.ts note) — a minimal, local zod check is
- * the safer way to fail loudly on a missing/misconfigured secret.
+ * It's validated inline (below) rather than through src/config/env/serverEnv.ts.
+ * Next.js 16's proxy.ts convention runs on the Node.js runtime (not Edge, and this
+ * is not configurable — see the "Migration to proxy.ts" note in CLAUDE.md), so
+ * that module COULD be imported here now; it deliberately still isn't, to keep
+ * this file's diff from the working middleware.ts version minimal while the
+ * migration itself is what's being validated in production. Revisit once proxy.ts
+ * has been live and stable for a while.
  *
  * Known tradeoff, on purpose: the access_token cookie is short-lived (~15 min,
  * matching the backend's JWT_ACCESS_TTL_SECONDS) so it can be legitimately expired
@@ -32,7 +31,7 @@ import z from "zod";
  * still present — the client-side AuthProvider's silent refresh and every API
  * call's own 401-triggers-refresh interceptor handle recovery from there. Actual
  * DATA access is still fully protected regardless, by the backend's own
- * AccessTokenGuard/RolesGuard on every request — this middleware is a fast,
+ * AccessTokenGuard/RolesGuard on every request — this proxy is a fast,
  * page-load-time first line of defense, not the only line of defense.
  */
 
@@ -49,7 +48,8 @@ const ADMIN_ONLY_PREFIXES = ["/admin"];
 // NOTE: CSRF token attachment lives in src/shared/lib/api-client.ts (requestInterceptor,
 // reads the csrf-token cookie via document.cookie). This is the only CSRF interceptor —
 // an earlier duplicate here read from a <meta> tag that was never rendered and relied on
-// `document`, which doesn't exist in the Edge middleware runtime; it could never have run.
+// `document`, which doesn't exist in this proxy's runtime (browser-only global); it
+// could never have run.
 
 const jwtAccessSecretSchema = z.string().min(1, "JWT_ACCESS_SECRET must be set");
 
@@ -60,7 +60,7 @@ async function verifyAccessToken(token: string): Promise<{ role: string } | null
     // verification (fail-closed), which used to happen silently — this makes it
     // show up in function logs instead of reading as unexplained "weird prod
     // behavior" where protected routes fall back to the refresh-token path.
-    console.error("[middleware] JWT_ACCESS_SECRET is missing or empty — all access token verification will fail closed.");
+    console.error("[proxy] JWT_ACCESS_SECRET is missing or empty — all access token verification will fail closed.");
     return null;
   }
 
@@ -73,7 +73,7 @@ async function verifyAccessToken(token: string): Promise<{ role: string } | null
   }
 }
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   const isProtected = PROTECTED_PREFIXES.some((prefix) => pathname.startsWith(prefix));

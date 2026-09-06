@@ -7,7 +7,7 @@ const isProd = process.env.NODE_ENV === "production";
 // chunks) — omitted in production. 'unsafe-inline' stays for both: Next's own
 // bootstrap/hydration scripts and styled-jsx-style inline styles rely on it,
 // and moving to a nonce-based CSP would mean threading a per-request nonce
-// through middleware into every layout — a real follow-up, not this pass.
+// through the proxy into every layout — a real follow-up, not this pass.
 const cspDirectives = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${isProd ? "" : " 'unsafe-eval'"}`,
@@ -54,7 +54,7 @@ const nextConfig: NextConfig = {
       // access_token/refresh_token/csrf-token cookies same-origin: calling the
       // backend's absolute URL directly from the browser instead of through this
       // proxy means those cookies get set on the BACKEND's origin, invisible to
-      // this app's own document.cookie and to middleware.ts.
+      // this app's own document.cookie and to proxy.ts.
       { source: "/api/backend/:path*", destination: `${backendUrl}/:path*` },
     ];
   },

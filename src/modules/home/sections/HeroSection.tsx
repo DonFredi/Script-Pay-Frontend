@@ -22,7 +22,7 @@ const HeroSection = () => {
          
           <h1>Send and receive M-Pesa payments without the setup headache</h1>
           <p className="text-foreground-muted text-lg">
-            Collect via STK Push, Paybill, and Till, or disburse funds straight out with B2C payouts — all from one
+            Collect via Send Money, Paybill, and Till, or disburse funds straight out with B2C payouts — all from one
             dashboard, with automatic reconciliation and a full audit trail, so you always know where a payment
             actually stands.
           </p>

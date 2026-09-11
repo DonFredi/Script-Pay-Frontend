@@ -38,7 +38,7 @@ const HeroSection = () => {
           <div className="flex flex-row flex-wrap justify-start gap-x-6 gap-y-3 pt-2">
             {trustPoints.map(({ icon: Icon, label }) => (
               <div key={label} className="flex flex-row items-center gap-2">
-                <Icon size={20} strokeWidth={2} className="text-green-600" />
+                <Icon size={20} strokeWidth={2} className="text-success" />
                 <span className="text-sm text-foreground-muted">{label}</span>
               </div>
             ))}

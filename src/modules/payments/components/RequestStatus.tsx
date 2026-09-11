@@ -47,8 +47,8 @@ export const RequestStatus = ({ status }: RequestStatusProps) => {
                 <div
                   className={cn(
                     "flex h-8 w-8 items-center justify-center rounded-full border-2 transition-colors",
-                    completed && "bg-green-500 border-green-500 text-white",
-                    active && "bg-blue-500 border-blue-500 text-white",
+                    completed && "bg-success border-success text-white",
+                    active && "bg-primary border-primary text-primary-foreground",
                     !completed && !active && "border-muted-foreground/30 bg-background",
                   )}
                 >
@@ -56,7 +56,7 @@ export const RequestStatus = ({ status }: RequestStatusProps) => {
                 </div>
 
                 {index !== steps.length - 1 && (
-                  <div className={cn("mt-1 h-10 w-0.5", completed ? "bg-green-500" : "bg-border")} />
+                  <div className={cn("mt-1 h-10 w-0.5", completed ? "bg-success" : "bg-border")} />
                 )}
               </div>
 

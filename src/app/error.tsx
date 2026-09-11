@@ -12,7 +12,7 @@ export default function Error({ error, reset }: { error: Error; reset: () => voi
   return (
     <PageWrapper>
       <SectionWrapper className="flex flex-col gap-2 justify-start">
-        <h2 className="text-red-500 font-bold">Error</h2>
+        <h2 className="text-destructive font-bold">Error</h2>
         <p className="">Something has gone wrong, please try again!</p>
         <p className="">{error.message}</p>
         <Button onClick={() => reset()} className="w-fit">

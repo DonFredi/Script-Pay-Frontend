@@ -58,7 +58,7 @@ export function CreateApiKeyForm({ tenantId }: { tenantId: string }) {
     return (
       <div className="space-y-3 rounded-lg border border-amber-300 bg-amber-50 p-4">
         <P className="font-medium text-amber-900">Copy this key now — it will never be shown again.</P>
-        <code className="block break-all rounded bg-white p-3 font-mono text-sm">{created.rawKey}</code>
+        <code className="block break-all rounded bg-background p-3 font-mono text-sm">{created.rawKey}</code>
         <P className="text-sm text-amber-900">Scopes: {created.scopes.join(", ")}</P>
         <div className="flex gap-2">
           <Button type="button" onClick={handleCopy}>

@@ -48,7 +48,7 @@ export function AppSidebar({ navItems, userLabel, ...props }: AppSidebarProps) {
       <SidebarFooter className="gap-2 p-4">
         <NavUser label={userLabel} />
         <div className="pb-2 text-center">
-          <small className="text-green-400">{siteConfig.name}</small>
+          <small className="text-muted-foreground">{siteConfig.name}</small>
           <Copyright />
         </div>
       </SidebarFooter>

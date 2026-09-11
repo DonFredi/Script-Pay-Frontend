@@ -11,11 +11,11 @@ import { useTransaction } from "./useTransactions";
 import { useTenant } from "@/modules/admin/useTenants";
 
 const STATUS_STYLES: Record<TransactionStatus, string> = {
-  SETTLED: "text-green-600 font-medium",
-  FAILED: "text-red-600 font-medium",
-  REVERSED: "text-red-600 font-medium",
-  PENDING: "text-yellow-600 font-medium",
-  PROCESSING: "text-yellow-600 font-medium",
+  SETTLED: "text-success font-medium",
+  FAILED: "text-destructive font-medium",
+  REVERSED: "text-destructive font-medium",
+  PENDING: "text-primary font-medium",
+  PROCESSING: "text-primary font-medium",
 };
 
 function formatDate(iso: string) {
@@ -48,7 +48,9 @@ function ReceiptLetterhead() {
  */
 function channelLabel(channel: string): string {
   if (channel === "STK_PUSH") return "M-Pesa STK Push";
-  if (channel === "B2C") return "M-Pesa payout to customer";
+  if (channel === "B2C") return "M-Pesa Payout to Customer";
+  if (channel === "PAYBILL") return "M-Pesa Paybill";
+  if (channel === "TILL") return "M-Pesa Till";
   return `M-Pesa ${channel}`;
 }
 
@@ -91,8 +93,8 @@ export function TransactionDetailPage({ transactionId, backHref }: { transaction
                   <span
                     className={
                       transaction.direction === "OUTBOUND"
-                        ? "rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700"
-                        : "rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700"
+                        ? "rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary"
+                        : "rounded-full bg-success/10 px-2 py-0.5 text-xs font-medium text-success"
                     }
                   >
                     {transaction.direction === "OUTBOUND" ? "SENT" : "PAID"}

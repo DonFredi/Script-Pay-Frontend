@@ -216,7 +216,7 @@ const StkPushSection = () => {
               {status === "pending" ? "Sending…" : "Send Prompt"}
             </Button>
           </FieldSet>
-          {message && <div className="text-sm p-3 rounded bg-gray-100">{message}</div>}
+          {message && <div className="text-sm p-3 rounded bg-muted">{message}</div>}
         </form>
       </div>
       <RequestStatus status={status} />

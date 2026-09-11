@@ -12,7 +12,7 @@ export default function Footer() {
         <Badge />
         <Navbar />
         <Developer />
-        <div className="flex flex-row items-center gap-4 text-sm text-slate-500">
+        <div className="flex flex-row items-center gap-4 text-sm text-muted-foreground">
           <Link href="/terms" className="hover:underline">
             Terms of Service
           </Link>

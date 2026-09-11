@@ -48,7 +48,7 @@ const EaseOfUseSection = () => {
             >
               Send Payment Request
             </div>
-            <div className="flex items-center gap-2 rounded-lg bg-green-50 px-3 py-2 text-sm text-green-700">
+            <div className="flex items-center gap-2 rounded-lg bg-success/10 px-3 py-2 text-sm text-success">
               <CheckCircle2 size={16} strokeWidth={2} />
               Payment received — KES 1,500
             </div>

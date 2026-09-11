@@ -63,7 +63,7 @@ export default function MobileNav() {
           <LogoutButton onLoggedOut={() => setOpen(false)}>Log Out</LogoutButton>
         </nav>
         <SheetFooter className="text-center p-0">
-          <small className="text-green-400">{siteConfig.name}</small>
+          <small className="text-muted-foreground">{siteConfig.name}</small>
           <Copyright />
         </SheetFooter>
       </SheetContent>

@@ -24,12 +24,12 @@ const formatDate = (isoString: string) => {
 const getStatusStyle = (status: Transaction["status"]) => {
   switch (status) {
     case "SETTLED":
-      return "text-green-600 font-medium";
+      return "text-success font-medium";
     case "FAILED":
     case "REVERSED":
-      return "text-red-600 font-medium";
+      return "text-destructive font-medium";
     default: // PENDING, PROCESSING
-      return "text-yellow-600 font-medium";
+      return "text-primary font-medium";
   }
 };
 
@@ -41,9 +41,9 @@ const getStatusStyle = (status: Transaction["status"]) => {
 // already fixed for.
 function DirectionBadge({ direction }: { direction: Transaction["direction"] }) {
   return direction === "OUTBOUND" ? (
-    <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">Sent</span>
+    <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">Sent</span>
   ) : (
-    <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">Received</span>
+    <span className="rounded-full bg-success/10 px-2 py-0.5 text-xs font-medium text-success">Received</span>
   );
 }
 

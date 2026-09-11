@@ -1,6 +1,6 @@
 ---
 name: add-feature-module
-description: Use when adding a new feature area to this Next.js app (a new dashboard section, a new API integration) — covers the modules/<feature> file convention, wiring a new API call through api-client correctly, and registering a new protected route in middleware.ts.
+description: Use when adding a new feature area to this Next.js app (a new dashboard section, a new API integration) — covers the modules/<feature> file convention, wiring a new API call through api-client correctly, and registering a new protected route in proxy.ts.
 ---
 
 # Adding a new feature module in ScriptPay Frontend
@@ -50,7 +50,7 @@ modules.
 
 ## 4. If the feature needs a protected route
 
-Add the new path prefix to **both** arrays in `src/middleware.ts`:
+Add the new path prefix to **both** arrays in `src/proxy.ts`:
 
 ```ts
 const PROTECTED_PREFIXES = [..., "/your-new-section"];
@@ -60,10 +60,10 @@ const ADMIN_ONLY_PREFIXES = [..., "/your-new-section"];
 
 And to the `matcher` array in the same file's `export const config`. A page
 under `app/(main)/(protected)/` that isn't also listed in
-`PROTECTED_PREFIXES` gets no Edge-level protection — it would still be
-gated by the backend's own guards on any data request, but the fast
-first-line-of-defense middleware wouldn't cover it (see
-`docs/decisions.md` entry 1 for why that gap matters).
+`PROTECTED_PREFIXES` gets no first-pass protection from `proxy.ts` — it
+would still be gated by the backend's own guards on any data request, but
+that fast first-line-of-defense wouldn't cover it (see `docs/decisions.md`
+entry 1 for why that gap matters).
 
 ## 5. Update the docs
 

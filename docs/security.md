@@ -22,11 +22,11 @@ session it's given. Verified against source as of 2026-08-21.
   point is that `api-client.ts` must read it (`document.cookie`) to echo it
   back as `X-CSRF-Token`. See `docs/architecture.md`/`docs/decisions.md` for
   why this interceptor exists only in `api-client.ts` and never in
-  `middleware.ts` (`document` doesn't exist in the Edge runtime).
+  `proxy.ts` (`document` doesn't exist in proxy.ts's Node.js runtime).
 
 ## Route protection is defense-in-depth, not the boundary
 
-`middleware.ts` verifies the access token at the Edge before a protected page
+`proxy.ts` verifies the access token server-side before a protected page
 renders — this stops the specific failure mode where a Server Component's
 data fetching would otherwise run before any client-side redirect could react
 (see `docs/decisions.md` entry 1). It is **not** the authorization boundary:
@@ -42,7 +42,7 @@ with no valid credential still gets a 401 there, refreshed transparently by
 All browser-originated API calls go through the same-origin
 `/api/backend/*` rewrite (`next.config.ts`), never the backend's real URL
 directly — required for the cookies the backend sets to be visible to this
-app's own `document.cookie` reads and to `middleware.ts`. See
+app's own `document.cookie` reads and to `proxy.ts`. See
 `docs/decisions.md` entry 3 for the specific way calling the backend
 directly fails silently (login still "succeeds," only cookie-dependent
 behavior breaks). Server-side calls (SSR, route handlers) do use the
@@ -63,7 +63,7 @@ aren't reported at all (expected auth flow, not an exceptional condition).
 
 `JWT_ACCESS_SECRET` (server-only, `src/config/env/serverEnv.ts`) must be
 byte-for-byte identical to the backend's own value — it's what
-`middleware.ts` uses to verify a token this app never issues, only reads.
+`proxy.ts` uses to verify a token this app never issues, only reads.
 It is kept out of `clientEnv.ts` specifically so it structurally cannot be
 bundled into client-side JavaScript; see `docs/decisions.md` entry 6 for why
 the client/server env split exists as two separate schema files rather than
@@ -72,7 +72,7 @@ one shared one.
 ## What this app does not do (by design)
 
 - Does not verify passwords, issue tokens, or make any authorization
-  decision beyond the Edge-level route-protection heuristic above — all of
+  decision beyond the proxy.ts route-protection heuristic above — all of
   that is the backend's job.
 - Does not call Safaricom directly, ever — only the backend's
   `infrastructure/daraja/DarajaClient` does.
@@ -85,7 +85,7 @@ one shared one.
 - No E2E/integration test exercises the real login → cookie → refresh →
   retry flow against an actual `Script-Pay-Backend` instance — everything
   today is unit-level with mocked `axios`/api modules (see
-  `docs/testing.md`). The individual pieces (`middleware.ts`'s JWT
+  `docs/testing.md`). The individual pieces (`proxy.ts`'s JWT
   verification, `api-client.ts`'s 401-refresh-retry interceptor,
   `AuthProvider.tsx`'s rehydration logic) are each unit-tested, but the
   full chain end-to-end against a real backend is not.
@@ -110,9 +110,9 @@ one shared one.
   working afterward — without it, every `/auth/refresh` call would start
   failing CSRF validation the moment the backend guard is added.
 
-Resolved since this was last reviewed: `middleware.ts`'s JWT verification
+Resolved since this was last reviewed: `proxy.ts`'s JWT verification
 and `api-client.ts`'s 401-refresh-retry interceptor are both now covered by
-`middleware.spec.ts` / `api-client.spec.ts` (see `docs/testing.md`), and a
+`proxy.spec.ts` / `api-client.spec.ts` (see `docs/testing.md`), and a
 CI pipeline (`.github/workflows/ci.yml`, added 2026-08-25) now runs
 `tsc`/`eslint`/tests on every push and PR.
 

@@ -22,7 +22,7 @@ before any client-side redirect could stop it. This is a real authorization
 gap, not a cosmetic one — it depended entirely on the backend guard being the
 only real check, with the frontend offering no early defense at all.
 
-**Chosen**: `middleware.ts`, which didn't exist before, verifies the
+**Chosen**: `proxy.ts`, which didn't exist before, verifies the
 backend-issued access token directly at the Edge with `jose`, the same
 library and shared secret (`JWT_ACCESS_SECRET`) the backend uses to sign it.
 This only became possible once the backend moved off Firebase (see backend
@@ -61,7 +61,7 @@ visibility is origin-scoped.
 allow it, and the JSON response body of a request (e.g. a successful login)
 comes back fine. But the cookies the backend sets land on the *backend's*
 origin, not this app's — invisible to `document.cookie` reads in
-`api-client.ts` and to `middleware.ts` reading incoming request cookies on
+`api-client.ts` and to `proxy.ts` reading incoming request cookies on
 its own origin. CSRF header attachment and silent refresh both silently stop
 working, while login still appears to "succeed" — exactly the shape of bug
 that's easy to ship and hard to catch in casual testing.
@@ -85,7 +85,7 @@ above), so it will legitimately be missing/expired on many page loads even
 for a validly logged-in user — but Edge middleware can't itself run the
 silent-refresh flow without adding latency to every navigation.
 
-**Rejected**: Having `middleware.ts` call the backend's `/auth/refresh`
+**Rejected**: Having `proxy.ts` call the backend's `/auth/refresh`
 itself before rendering any protected page. This would add a network round
 trip to every single navigation for a routine, expected situation (a token
 that simply aged out), not just the exceptional case.
@@ -106,9 +106,9 @@ every request regardless of what middleware decided.
 an `X-CSRF-Token` header on state-changing requests.
 
 **Rejected**: An earlier duplicate CSRF-reading implementation in
-`middleware.ts` that read from a `<meta>` tag that was never actually
+`proxy.ts` that read from a `<meta>` tag that was never actually
 rendered, and separately relied on `document.cookie` — which doesn't exist in
-the Edge runtime `middleware.ts` executes in. This code could never have run
+the Edge runtime `proxy.ts` executes in. This code could never have run
 correctly; it was dead logic that looked functional.
 
 **Chosen**: One CSRF interceptor, in `src/shared/lib/api-client.ts`'s request
@@ -117,7 +117,7 @@ genuinely exists) and attaches `X-CSRF-Token` on POST/PUT/PATCH/DELETE only.
 
 ## 6. Separate client/server env schemas instead of one shared schema
 
-**Problem**: `JWT_ACCESS_SECRET` (used by `middleware.ts` to verify tokens)
+**Problem**: `JWT_ACCESS_SECRET` (used by `proxy.ts` to verify tokens)
 must never end up bundled into client-side JavaScript, while `NEXT_PUBLIC_*`
 values are meant to be public and browser-readable.
 
@@ -260,7 +260,7 @@ On this app it is the wrong default. `sendDefaultPii` tells Sentry to attach
 request headers, request bodies and IP addresses to events. The headers include
 the httpOnly `access_token` and `refresh_token` cookies this app's whole auth
 model depends on, and the bodies include payment requests carrying `msisdn` and
-amount. The edge config is the worst of the three: `middleware.ts` runs on every
+amount. The edge config is the worst of the three: `proxy.ts` runs on every
 protected route and exists precisely to read those auth cookies.
 
 This directly contradicted the care taken two files away. `api-client.ts`'s
@@ -280,3 +280,90 @@ context. Nothing in this app set Sentry user context anyway, and for a payment
 dashboard the identifying data is the part worth losing. An event still carries
 the endpoint, method, status code and which fields failed validation — which is
 what the scrubbing in `api-client.ts` already decided was the useful, safe subset.
+
+## 12. `proxy.ts` migration re-attempted and verified via a real Vercel Preview
+deployment, not local reproduction
+
+**Problem**: entry 1 chose Edge middleware; `CLAUDE.md` recorded a failed
+2026-08-23 attempt to rename `middleware.ts` → `proxy.ts` (Next.js 16's
+replacement convention) after it caused protected routes — including plain
+static ones like `/dashboard` — to 500 in production, while `next dev` and a
+local `next build && next start` both showed nothing wrong. The warning left
+behind said, correctly, not to retry this without a real repro plan.
+
+**Investigation**: official Next.js docs (fetched fresh, not recalled) confirm
+`proxy.ts` fixes the runtime to Node.js — `export const runtime` in a proxy
+file throws, there is no Edge option. A documented Vercel/Next.js bug class
+(`vercel/next.js#93852` and related community reports of
+`MIDDLEWARE_INVOCATION_FAILED`) is triggered by exactly that combination — a
+Node.js-runtime proxy plus a top-level `import * as Sentry from
+"@sentry/nextjs"` in `instrumentation.ts` — and this project's
+`instrumentation.ts` has exactly that import, for `onRequestError` wiring. That
+looked like a strong candidate explanation.
+
+It isn't a clean match, though, and this entry says so plainly:
+`package-lock.json` at the 2026-08-23 commit already pinned `next@16.3.1` —
+the *same* version installed today. Whatever caused the original failure,
+it wasn't a Next.js version this project has since moved past. Retrying the
+migration is not "retry now that it's patched" — the code and the framework
+version are identical to what failed before. Only the actual test method
+differed.
+
+**What the retest actually required**: reproducing this needed a real Vercel
+Preview deployment, since that's the one thing the original attempt's testing
+never included and the one thing Vercel's own edge/bundling layer (implicated
+in the GitHub issue) can't be exercised without. That surfaced a second,
+completely unrelated problem first: **Preview deployments for this entire
+project have been broken since before this migration was ever attempted** —
+`NEXT_PUBLIC_API_URL` and `NEXT_PUBLIC_SITE_URL` were scoped to the
+Production environment only in Vercel, so any Preview build failed at
+`next build` with `Invalid client environment variables: NEXT_PUBLIC_API_URL:
+'Invalid input: expected string, received undefined'` before the app — or its
+proxy — ever ran. This would have blocked the 2026-08-23 investigation just as
+completely as it blocked this one; there is no way to tell from here whether
+it also masked what actually happened that day (a genuinely different
+Preview-only failure could easily have been misread as the same "proxy.ts
+regression" everything since has been blamed on). Fixed by adding both
+variables to the Preview environment too (same public, non-secret values as
+Production) via `vercel env add NEXT_PUBLIC_API_URL preview` /
+`NEXT_PUBLIC_SITE_URL preview`.
+
+**Verified**: redeployed the identical commit once Preview env vars were
+fixed. Build succeeded. Preview deployments sit behind Vercel's own
+deployment-protection SSO wall, which is a separate gate in front of the app
+entirely — testing through it required an authenticated Vercel session, not
+`curl`. Through that: the homepage renders fully with real content, `GET
+/dashboard` (unauthenticated) redirects to `/auth/login?redirect=%2Fdashboard`,
+and `GET /admin/tenants` (unauthenticated) redirects to login the same way —
+all three the exact behavior `proxy.ts` is supposed to produce, with no 500,
+no `MIDDLEWARE_INVOCATION_FAILED`, and no console errors on any of them.
+
+**Chosen**: merge the migration. `middleware.ts` → `proxy.ts`, exported
+function renamed `middleware` → `proxy`, matcher config and auth logic
+otherwise untouched — see `src/proxy.ts` and `src/proxy.spec.ts` (11/11
+passing, unchanged assertions).
+
+**What remains genuinely unresolved, stated plainly**: the original
+2026-08-23 root cause was never conclusively identified, and this entry
+should not be read as having found it. The leading hypothesis (the
+Sentry-import + Node-runtime Vercel bundling bug above) was never tested
+against the actual failing deployment — only against today's environment,
+where it did not reproduce. The most likely honest explanation is a
+transient issue in Vercel's own build/bundling infrastructure at the time
+(independent of the pinned `next` version, which didn't change), but that
+can't be proven after the fact. If protected routes ever start 500ing on
+`proxy.ts` again, treat it as a fresh incident — don't assume it's "the same
+bug come back," and don't assume this entry's clean result rules it out.
+
+**Lesson for next time**: a Preview build failing for an unrelated
+configuration reason can look exactly like — and fully block testing of —
+the specific regression you're trying to verify. Confirm the Preview
+environment can build and serve *anything* before concluding whatever you're
+actually testing is (or isn't) the problem. And more generally: `next dev`
+and a local `next build && next start` were insufficient evidence twice now,
+in both directions — they showed nothing wrong before the 2026-08-23
+production failure, and they would have shown nothing wrong just now too,
+telling us nothing about whether the fix actually held. A real Preview
+deployment is the only thing in this stack that exercises Vercel's own
+build/bundling/edge layer at all; treat it as required evidence for any
+future `proxy.ts` change, not an optional extra step.

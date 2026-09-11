@@ -19,7 +19,7 @@ src/
 ├── components/           shadcn-derived UI primitives, admin sidebar/nav shell
 ├── shared/                cross-cutting lib code: api-client (axios + interceptors), utils, layout
 ├── providers/            AuthProvider, QueryProvider
-└── middleware.ts         Edge-runtime JWT verification for route protection
+└── proxy.ts              Node.js-runtime JWT verification for route protection
 ```
 
 ## Running locally
@@ -32,7 +32,7 @@ npm run dev
 
 Requires a running instance of `Script-Pay-Backend` — point the API base URL
 env var at it. `JWT_ACCESS_SECRET` **must match the backend's own
-`JWT_ACCESS_SECRET` exactly** — the Edge middleware verifies the
+`JWT_ACCESS_SECRET` exactly** — `proxy.ts` verifies the
 backend-issued JWT itself, using the same shared secret.
 
 ## Scripts
@@ -49,7 +49,7 @@ Session state is driven entirely by the backend's own JWT/refresh-token pair, no
 
 - **Access token**: held in memory only (never `localStorage`) after login, attached to API requests via an axios interceptor.
 - **Refresh token**: httpOnly cookie, invisible to JavaScript, used to silently recover a session on page load and to transparently retry a request after a `401`.
-- **Route protection**: `middleware.ts` verifies the access token at the Edge before a protected page renders — a fast first line of defense, not the actual authorization boundary, which the backend's own guards enforce on every request regardless.
+- **Route protection**: `proxy.ts` verifies the access token server-side before a protected page renders — a fast first line of defense, not the actual authorization boundary, which the backend's own guards enforce on every request regardless.
 
 Full detail in `CLAUDE.md`.
 
@@ -58,8 +58,8 @@ Full detail in `CLAUDE.md`.
 `npx tsc --noEmit` and `npx eslint .` always work. `npm test` (→ `jest`) and
 `npm run test:coverage` (→ `jest --coverage`, enforced against per-file
 thresholds) run the suite — the hook/mutation layer across auth, payments,
-transactions, api-keys, tenants, onboarding, and admin, plus the Edge
-middleware and the STK-push form, is covered; see `docs/testing.md` for
+transactions, api-keys, tenants, onboarding, and admin, plus the
+proxy and the STK-push form, is covered; see `docs/testing.md` for
 exactly what's tested and what isn't. `.github/workflows/ci.yml` runs all of
 the above on every push and PR. Running `jest` locally on Windows
 additionally requires the Microsoft Visual C++ Redistributable (a

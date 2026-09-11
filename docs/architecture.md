@@ -11,7 +11,7 @@ document is about how requests actually flow through the app and why.
 Browser
   │
   ▼
-Next.js 16 App Router (this repo) ── Edge middleware (middleware.ts)
+Next.js 16 App Router (this repo) ── Proxy (proxy.ts, Node.js runtime)
   │
   ├─ Server: SSR / route handlers → call the backend's absolute URL directly
   └─ Client: axios (api-client.ts) → same-origin rewrite proxy → backend
@@ -38,7 +38,7 @@ This split exists because `access_token`, `refresh_token`, and `csrf-token`
 are cookies **set by the backend**. If the browser called the backend's
 absolute URL directly, those cookies would be scoped to the backend's own
 origin — invisible to this app's `document.cookie` reads and to
-`middleware.ts` reading incoming request cookies on its own origin. The JSON
+`proxy.ts` reading incoming request cookies on its own origin. The JSON
 response body of a request (e.g. a successful login payload) would still
 come back fine either way, which is exactly what makes this regression easy
 to miss in review — only the cookie-dependent parts (CSRF header attachment,
@@ -75,7 +75,7 @@ Every subsequent request (api-client.ts)
     - AuthProvider listens for "auth:session-expired" → clearSession() → isAuthenticated
       flips false → ProtectedLayout's own effect redirects to /auth/login
 
-Edge middleware (middleware.ts), before any protected page renders:
+proxy.ts (Node.js runtime), before any protected page renders:
   - no access_token AND no refresh_token → redirect to /auth/login
   - access_token present and valid (jose.jwtVerify, same secret as backend) → proceed,
     and additionally check role for /admin/* routes
@@ -89,18 +89,21 @@ The access token is held **in memory only** (`setAccessToken`/
 survive a hard refresh by design; the refresh token cookie recovers the
 session silently on the next request.
 
-### Why middleware exists at all, and what it deliberately does not do
+### Why proxy.ts exists at all, and what it deliberately does not do
 
-Before `middleware.ts` existed, every route-protection check in this codebase
+Before `proxy.ts` existed, every route-protection check in this codebase
 was `"use client"` (a `ProtectedLayout`, `admin/layout.tsx`) — meaning
 protection only kicked in after JS loaded and React rendered, and any Server
 Component data-fetching on a "protected" page would already have run on the
-server before a client-side redirect could ever stop it. `middleware.ts`
-verifies the backend-issued JWT directly at the Edge, using the same
+server before a client-side redirect could ever stop it. `proxy.ts`
+verifies the backend-issued JWT directly, server-side, using the same
 `jose`-based verification the backend itself uses to sign the token — this
 only works because the backend issues its own JWT rather than depending on
-something like Firebase's Admin SDK, which cannot run on the Edge runtime at
-all.
+something like Firebase's Admin SDK. (This file ran on the Edge runtime
+under the old `middleware.ts` convention, which is part of why Firebase's
+Admin SDK was never an option — it can't run on Edge. Next.js 16's `proxy.ts`
+convention fixes the runtime to Node.js instead, not configurable either
+way; see decisions.md entry 12.)
 
 Known, deliberate trade-off: the access token cookie is short-lived (~15 min,
 matching the backend's `JWT_ACCESS_TTL_SECONDS`), so it can be legitimately
@@ -119,9 +122,10 @@ authorization boundary.
 
 The only CSRF token attachment lives in `src/shared/lib/api-client.ts`
 (`requestInterceptor`, reads the `csrf-token` cookie via `document.cookie`
-and attaches `X-CSRF-Token`). It cannot live in `middleware.ts` — `document`
-does not exist in the Edge runtime middleware runs in, so an earlier
-duplicate CSRF read there could never have worked.
+and attaches `X-CSRF-Token`). It cannot live in `proxy.ts` — `document`
+does not exist in proxy.ts's Node.js runtime any more than it existed in
+`middleware.ts`'s Edge runtime, so an earlier duplicate CSRF read there
+could never have worked, on either convention.
 
 ## Project structure
 
@@ -139,7 +143,7 @@ src/
 ├── shared/                cross-cutting UI/lib code (api-client, utils, layout, email templates)
 ├── providers/            AuthProvider, QueryProvider
 ├── config/               env schema (client/server split), site config
-└── middleware.ts         Edge-runtime JWT verification for route protection
+└── proxy.ts              Node.js-runtime JWT verification for route protection
 ```
 
 The dashboard shell (`components/ui/sidebar.tsx`, used by both `(client)` and
@@ -213,7 +217,7 @@ counter rather than a timestamp.
 `src/config/env/clientEnv.ts` validates only `NEXT_PUBLIC_*` browser-safe
 vars (`zod`, fails fast on boot if invalid). `src/config/env/serverEnv.ts`
 holds server-only values, including `JWT_ACCESS_SECRET` — the same secret
-`middleware.ts` uses to verify backend-issued tokens, which must never be
+`proxy.ts` uses to verify backend-issued tokens, which must never be
 bundled into client JavaScript. Keeping them as two separate schemas rather
 than one shared one makes it structurally impossible to accidentally import
 a server-only secret into a client component.
@@ -242,9 +246,12 @@ responses are not reported at all (expected, not exceptional).
 attaches request headers, bodies and IP addresses to every event: on this app
 that means the httpOnly `access_token`/`refresh_token` cookies and payment
 bodies carrying `msisdn` and amount, handed to Sentry through the back door
-while the interceptor above was carefully keeping them out. The edge runtime
-mattered most, since `middleware.ts` runs on every protected route and exists to
-read exactly those cookies. See `docs/decisions.md` entry 11; the backend's own
+while the interceptor above was carefully keeping them out. `sentry.server.config.ts`
+matters most now, since `proxy.ts` runs on every protected route, reads exactly
+those cookies, and — since its 2026-09-11 migration off the old `middleware.ts`
+Edge-runtime convention — is instrumented by the Node.js Sentry config, not the
+Edge one (`sentry.edge.config.ts`'s `sendDefaultPii` is still off too, but it no
+longer covers this file). See `docs/decisions.md` entries 11-12; the backend's own
 `Sentry.init` has always had it off for the same reason.
 
 ## Testing

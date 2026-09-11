@@ -64,8 +64,8 @@ regardless. Confirmed fixed: run 32869218950 passed all three jobs.
   fails mid-session (see `docs/decisions.md` entry 9) — asserts the listener
   actually logs the user out, not just that it's registered.
 
-- `src/middleware.spec.ts` — the Edge route-protection logic in
-  `middleware.ts`: unprotected routes pass through; a protected route with no
+- `src/proxy.spec.ts` — the route-protection logic in
+  `proxy.ts` (Node.js runtime): unprotected routes pass through; a protected route with no
   cookies redirects to `/auth/login?redirect=<path>`; a protected non-admin
   route lets an expired/invalid access token through when a refresh token is
   present (the documented recovery-deferred-to-client tradeoff); `/admin/*`

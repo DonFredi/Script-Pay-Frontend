@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Poppins, Sofia_Sans } from "next/font/google";
+import { Toaster } from "sonner";
 import "@/styles/globals.css";
 import { generateSEO } from "@/shared/lib/seo";
 import QueryProvider from "@/providers/QueryProvider";
@@ -36,6 +37,12 @@ export default function RootLayout({
         <QueryProvider>
           <AuthProvider>{children}</AuthProvider>
         </QueryProvider>
+        {/* Mounted here, not per route-group layout: sonner's toast() calls are
+            no-ops with no <Toaster/> mounted in the current route tree, and
+            /auth/* (a sibling of (main), not nested under it) had none — every
+            toast.success/toast.error call on those pages (e.g. forgot-password's
+            "Email sent successfully") silently did nothing. */}
+        <Toaster position="top-center" />
       </body>
     </html>
   );

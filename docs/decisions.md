@@ -367,3 +367,44 @@ telling us nothing about whether the fix actually held. A real Preview
 deployment is the only thing in this stack that exercises Vercel's own
 build/bundling/edge layer at all; treat it as required evidence for any
 future `proxy.ts` change, not an optional extra step.
+
+## 13. Dropped `CsrfGuard` from the four unauthenticated auth routes (backend)
+
+**Problem**: A user resetting a forgotten password hit "CSRF token missing"
+on `POST /auth/reset-password` every time. `Script-Pay-Backend`'s
+`AuthController` guarded `forgot-password`, `reset-password`, `verify-email`,
+and `resend-verification` with plain `CsrfGuard` — but the `csrf-token`
+cookie these routes needed is only ever issued by `signup`, `login`, or
+`refresh` (`setCsrfCookie`, called from those three handlers only). Every one
+of these four routes runs specifically for a visitor with **no session**, so
+in the normal case the cookie never exists yet. They only ever "worked" by
+accident, when a stale `csrf-token` cookie survived in the browser from an
+earlier login. This is the same trap entry 9's frontend-side fix and the
+backend's `RefreshCsrfGuard` already worked through for `/auth/refresh` —
+see `docs/security.md`'s "Known gaps" for that history — just never applied
+to these four.
+
+**Rejected**: Mirroring `RefreshCsrfGuard`'s pattern (exempt only when the
+relevant cookie is absent). For `/auth/refresh` that exemption is a narrow
+edge case with a genuine no-op fallback (`{ accessToken: null }`). Here the
+"cookie absent" case *is* the normal case for all four routes — writing an
+exemption for it is equivalent to no guard at all, just with more code
+pretending otherwise.
+
+**Chosen**: Removed `@UseGuards(CsrfGuard)` entirely from all four
+(`auth.controller.ts`). `reset-password` and `verify-email` don't need CSRF
+protection independently of it: the emailed, single-use token carried in the
+request body is itself the possession proof a cross-site forgery can't
+supply. `forgot-password` and `resend-verification` have no session state
+for a forged request to change — the worst case is triggering an extra
+email — and `StrictPaymentThrottle` already rate-limits that. No frontend
+change was required; `api-client.ts`'s CSRF interceptor still attaches
+`X-CSRF-Token` when a cookie happens to be present, it's just no longer
+required on these four paths.
+
+**Verified**: `npx tsc --noEmit` clean after the change (including the now-
+unused `CsrfGuard` import removed from `auth.controller.ts`); existing
+`auth.controller.spec.ts` doesn't assert `CsrfGuard` on these four routes, so
+nothing needed updating there. Not yet verified against a running backend +
+real reset-password email flow end to end — see the E2E gap in
+`docs/security.md`/`docs/testing.md`.

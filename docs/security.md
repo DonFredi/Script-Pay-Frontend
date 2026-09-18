@@ -90,31 +90,40 @@ one shared one.
   `AuthProvider.tsx`'s rehydration logic) are each unit-tested, but the
   full chain end-to-end against a real backend is not.
 
-- **Backend gap (not this repo's code, but affects this repo's CSRF story):**
-  `Script-Pay-Backend`'s `AuthController.refresh` (`POST /auth/refresh`,
-  `auth.controller.ts` ~line 71) has no `@UseGuards(CsrfGuard)`, unlike its
-  sibling state-changing routes (e.g. `forgotPassword`, which does). Found
-  2026-08-28 while auditing why `apiPrivate` in `api-client.ts` never had the
-  CSRF/Bearer request interceptor attached (see `docs/decisions.md` and the
-  fix now applied in `api-client.ts`) — since `/auth/refresh` currently
-  doesn't check CSRF at all, that frontend gap wasn't causing live user
-  impact. But it means `/auth/refresh` is the one state-changing backend
-  route a same-site attacker could currently trigger without a CSRF token
-  (it only *reads* an httpOnly cookie and reissues session cookies, so the
-  practical damage is limited — no data mutation, no token exfiltration
-  possible cross-origin — but it's still an inconsistency with every other
-  POST route's guard policy). Backend-side fix: add `@UseGuards(CsrfGuard)`
-  to `refresh` in `auth.controller.ts` to match `forgotPassword`/`signup`'s
-  pattern. If that's done, `api-client.ts`'s `apiPrivate` interceptor fix
-  (already applied here) is what makes the frontend's refresh calls keep
-  working afterward — without it, every `/auth/refresh` call would start
-  failing CSRF validation the moment the backend guard is added.
-
 Resolved since this was last reviewed: `proxy.ts`'s JWT verification
 and `api-client.ts`'s 401-refresh-retry interceptor are both now covered by
 `proxy.spec.ts` / `api-client.spec.ts` (see `docs/testing.md`), and a
 CI pipeline (`.github/workflows/ci.yml`, added 2026-08-25) now runs
 `tsc`/`eslint`/tests on every push and PR.
+
+- **Fixed (backend-side): `/auth/refresh` missing `CsrfGuard`.** This section
+  used to describe `Script-Pay-Backend`'s `AuthController.refresh` as the one
+  state-changing route with no CSRF guard at all (found 2026-08-28). It now
+  carries `@UseGuards(RefreshCsrfGuard)` — a `CsrfGuard` subclass
+  (`refresh-csrf.guard.ts`) that exempts only requests with no `refresh_token`
+  cookie, since a logged-out visitor's blind refresh call is a documented,
+  intentional no-op (`AuthProvider.tsx` calls this on first load expecting
+  `{ accessToken: null }`, not a 403). Full CSRF validation still applies the
+  moment a session cookie is present — the only case where a forged refresh
+  could actually rotate someone's token. `api-client.ts`'s `apiPrivate`
+  interceptor already attaches the CSRF header on this call, so no frontend
+  change was needed once the backend guard landed.
+
+- **Fixed 2026-09-18: `forgot-password`/`reset-password`/`verify-email`/
+  `resend-verification` all 403'd with "CSRF token missing" for every real
+  caller.** These four routes are exactly the ones a visitor with **no**
+  session hits — but the `csrf-token` cookie is only ever issued by
+  `signup`/`login`/`refresh`, so a logged-out user calling them (the normal
+  case) never had one. Plain `CsrfGuard` on all four meant they only worked
+  by accident, when a stale cookie survived from an earlier session in the
+  same browser. Fix (backend-side, `auth.controller.ts`): dropped
+  `@UseGuards(CsrfGuard)` from all four. `reset-password`/`verify-email`
+  don't need it — the emailed, single-use token in the body is itself the
+  possession proof a forged request can't supply. `forgot-password`/
+  `resend-verification` have no session state for a forgery to change, and
+  `StrictPaymentThrottle` already rate-limits them. No frontend change was
+  needed; `api-client.ts` simply stops having a header to send that nothing
+  checks on these four paths.
 
 - **Fixed 2026-08-31**: the 401-refresh-retry interceptor treated the
   backend's `/auth/refresh` returning HTTP 200 with `accessToken: null` (its

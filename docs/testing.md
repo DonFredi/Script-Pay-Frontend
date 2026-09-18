@@ -1,6 +1,8 @@
 # Testing — ScriptPay Frontend
 
 Current state of the test setup, verified as of 2026-08-25 — not aspirational.
+(The Playwright E2E addition below is dated 2026-09-18; the rest of this file
+wasn't re-verified line-by-line on that date.)
 
 ## What's configured
 
@@ -284,11 +286,15 @@ runners) never hits this — it's Windows/MSVC-specific.
   config tweak.
 - `audit-logs.api.ts`'s `listAuditLogs` has no dedicated hook and no test —
   it's called directly from the admin audit-logs page component.
-- No E2E/integration test against a real (or containerized) backend —
-  everything today is unit-level with mocked `axios`/api modules. The full
-  login → cookie → refresh → retry loop, and a real STK-push round trip,
-  have never been exercised against an actual `Script-Pay-Backend`
-  instance.
+- **Partially addressed 2026-09-18**: `e2e/auth-refresh.spec.ts` (Playwright,
+  `npm run test:e2e`, see `e2e/README.md`) now exercises real signup → cookie
+  → silent-refresh → authenticated-request against an actual
+  `Script-Pay-Backend` instance — the one thing this bullet used to say had
+  never been tested. It's local-only: no CI wiring yet (would need a Postgres
+  service and a way to run the backend in `ci.yml`), and it doesn't yet cover
+  the interceptor's mid-session 401-triggers-refresh-then-retries path (needs
+  either waiting out the real ~15 min access-token TTL or synthesizing a 401
+  via `page.route`) or a real STK-push round trip. Both remain open.
 - Two small dead-code items surfaced while surveying every hook for this
   pass (see "What actually has tests today" above for detail):
   `src/modules/auth/refresh/refresh.api.ts` (`refresh()` has no importers)

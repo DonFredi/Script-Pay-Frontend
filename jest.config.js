@@ -27,7 +27,7 @@ module.exports = {
   // a real regression fails CI without pretending the rest of the codebase
   // is covered.
   coverageThreshold: {
-    "./src/middleware.ts": { statements: 100, branches: 90, functions: 100, lines: 100 },
+    "./src/proxy.ts": { statements: 100, branches: 90, functions: 100, lines: 100 },
     "./src/shared/lib/api-client.ts": { statements: 90, branches: 75, functions: 80, lines: 95 },
     "./src/providers/AuthProvider.tsx": { statements: 95, branches: 65, functions: 65, lines: 95 },
     "./src/modules/auth/shared/hooks/useAuth.ts": { statements: 100, branches: 100, functions: 100, lines: 100 },

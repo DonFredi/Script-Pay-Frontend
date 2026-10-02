@@ -48,7 +48,7 @@ export const RequestStatus = ({ status }: RequestStatusProps) => {
                   className={cn(
                     "flex h-8 w-8 items-center justify-center rounded-full border-2 transition-colors",
                     completed && "bg-success border-success text-white",
-                    active && "bg-primary border-primary text-primary-foreground",
+                    active && "bg-background border-primary text-primary",
                     !completed && !active && "border-muted-foreground/30 bg-background",
                   )}
                 >

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import PageWrapper from "@/shared/components/shared/PageWrapper";
 import SectionWrapper from "@/shared/components/shared/SectionWrapper";
@@ -14,8 +15,8 @@ const STATUS_STYLES: Record<TransactionStatus, string> = {
   SETTLED: "text-success font-medium",
   FAILED: "text-destructive font-medium",
   REVERSED: "text-destructive font-medium",
-  PENDING: "text-primary font-medium",
-  PROCESSING: "text-primary font-medium",
+  PENDING: "text-warning font-medium",
+  PROCESSING: "text-warning font-medium",
 };
 
 function formatDate(iso: string) {
@@ -23,20 +24,16 @@ function formatDate(iso: string) {
 }
 
 /**
- * Placeholder logo marks — swap each `<span>` for an `<img>`/`<svg>` once the
- * official ScriptPay and ScriptTagg logo assets exist. This replaces the
- * website nav (hidden on print via SiteHeader/Sidebar's `print:hidden`) as
- * the heading a printed receipt actually shows.
+ * ScriptPay (product) on the left, ScriptTagg (parent company) on the right.
+ * This replaces the website nav (hidden on print via SiteHeader/Sidebar's
+ * `print:hidden`) as the heading a printed receipt actually shows. The logos
+ * are the official brand files in public/brand/.
  */
 function ReceiptLetterhead() {
   return (
     <div className="mb-4 flex items-center justify-between gap-3 border-b pb-3">
-      <div className="flex h-10 w-28 items-center justify-center rounded border border-dashed text-[10px] font-medium text-muted-foreground">
-        <span>ScriptPay logo</span>
-      </div>
-      <div className="flex h-10 w-28 items-center justify-center rounded border border-dashed text-[10px] font-medium text-muted-foreground">
-        <span>ScriptTagg logo</span>
-      </div>
+      <Image src="/brand/scriptpay-logo.svg" alt="ScriptPay" width={1185} height={240} className="h-9 w-auto" />
+      <Image src="/brand/scripttagg-logo.png" alt="ScriptTagg" width={1300} height={243} className="h-9 w-auto" />
     </div>
   );
 }
@@ -93,7 +90,7 @@ export function TransactionDetailPage({ transactionId, backHref }: { transaction
                   <span
                     className={
                       transaction.direction === "OUTBOUND"
-                        ? "rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary"
+                        ? "rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-foreground"
                         : "rounded-full bg-success/10 px-2 py-0.5 text-xs font-medium text-success"
                     }
                   >

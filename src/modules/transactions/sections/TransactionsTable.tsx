@@ -29,7 +29,7 @@ const getStatusStyle = (status: Transaction["status"]) => {
     case "REVERSED":
       return "text-destructive font-medium";
     default: // PENDING, PROCESSING
-      return "text-primary font-medium";
+      return "text-warning font-medium";
   }
 };
 
@@ -41,7 +41,7 @@ const getStatusStyle = (status: Transaction["status"]) => {
 // already fixed for.
 function DirectionBadge({ direction }: { direction: Transaction["direction"] }) {
   return direction === "OUTBOUND" ? (
-    <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">Sent</span>
+    <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-foreground">Sent</span>
   ) : (
     <span className="rounded-full bg-success/10 px-2 py-0.5 text-xs font-medium text-success">Received</span>
   );

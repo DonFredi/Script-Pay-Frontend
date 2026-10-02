@@ -29,13 +29,13 @@ const envSchema = z.object({
   // degradation.
   NEXT_PUBLIC_SENTRY_DSN: z.preprocess((v) => (v === "" ? undefined : v), z.url().optional()),
 
-  NEXT_PUBLIC_SITE_NAME: optionalWithDefault("Script Pay"),
+  NEXT_PUBLIC_SITE_NAME: optionalWithDefault("ScriptPay"),
   NEXT_PUBLIC_SITE_DESCRIPTION: optionalWithDefault("Online M-Pesa payments for businesses"),
   NEXT_PUBLIC_CONTACT_PHONE: optionalWithDefault("+254 797 162 262"),
   NEXT_PUBLIC_CONTACT_EMAIL: optionalWithDefault("scripttagg@gmail.com"),
   NEXT_PUBLIC_CONTACT_WHATSAPP: optionalWithDefault("+254 797 162 262"),
   NEXT_PUBLIC_ADDRESS: optionalWithDefault("Obama Estate"),
-  NEXT_PUBLIC_OG_IMAGE: z.preprocess((v) => (v === "" ? undefined : v), z.string().default("")),
+  NEXT_PUBLIC_OG_IMAGE: optionalWithDefault("/brand/scriptpay-og.png"),
   NEXT_PUBLIC_SOCIAL_TWITTER: optionalWithDefault("https://x.com/scripttagg"),
   NEXT_PUBLIC_SOCIAL_INSTAGRAM: optionalWithDefault("https://instagram.com/scripttagg"),
   NEXT_PUBLIC_SOCIAL_PINTEREST: optionalWithDefault("https://pinterest.com/scripttagg"),

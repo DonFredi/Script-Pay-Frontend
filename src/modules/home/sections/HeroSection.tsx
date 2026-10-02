@@ -3,6 +3,7 @@ import Image from "next/image";
 import { ShieldCheck, RefreshCw, Smartphone } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import SectionWrapper from "@/shared/components/shared/SectionWrapper";
+import HeroIllustration from "../components/HeroIllustration";
 
 const trustPoints = [
   { icon: ShieldCheck, label: "Encrypted credentials" },
@@ -44,20 +45,12 @@ const HeroSection = () => {
             ))}
           </div>
         </div>
-        {/* The artwork is deliberately greyscale so it sits on the theme's neutral
-            `--primary`; the M-Pesa mark is layered over it rather than baked into
-            the file so it stays sharp at every viewport, keeps Safaricom's own
-            brand colour as the single point of contrast, and can be moved or
-            swapped without re-exporting the image. */}
+        {/* The artwork is an SVG component themed from the brand tokens (see
+            HeroIllustration); the M-Pesa mark is layered over it rather than baked
+            in so it stays sharp at every viewport, keeps Safaricom's own brand
+            colour, and can be moved or swapped without re-exporting anything. */}
         <div className="relative w-full md:w-1/2">
-          <Image
-            src="/images/hero_section_image.webp"
-            alt="ScriptPay dashboard preview"
-            width={1536}
-            height={1024}
-            className="w-full h-auto rounded-2xl shadow-lg"
-            priority
-          />
+          <HeroIllustration />
           <div className="absolute bottom-2 left-2 flex items-center gap-2 rounded-rad-lg border bg-card/90 p-2 shadow-lg backdrop-blur-sm sm:bottom-4 sm:left-4 sm:gap-3 sm:p-3">
             {/* alt="" — the adjacent label already names the mark, so announcing
                 it again would only repeat itself for a screen reader. */}

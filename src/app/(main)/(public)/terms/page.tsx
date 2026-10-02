@@ -10,7 +10,7 @@ export const metadata = generateSEO({
   url: "/terms",
 });
 
-const EFFECTIVE_DATE = "August 28, 2026";
+const EFFECTIVE_DATE = "October 2, 2026";
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -76,10 +76,15 @@ export default function TermsOfServicePage() {
         <Section title="5. Payments, fees, and settlement">
           <P>
             Funds from a successful M-Pesa transaction settle according to Safaricom&apos;s own Daraja settlement
-            timelines and rules — not ours. Any subscription or transaction fees for using {siteConfig.name} itself
-            (as opposed to Safaricom&apos;s own charges) will be disclosed to you separately at the time they apply.
-            We do not control, and are not responsible for, Safaricom&apos;s own fees, downtime, or transaction
-            limits.
+            timelines and rules — not ours. We do not control, and are not responsible for, Safaricom&apos;s own fees,
+            downtime, or transaction limits.
+          </P>
+          <P>
+            {siteConfig.name} itself is charged at a standard rate of KES 2,500 per month, plus a one-time onboarding
+            fee of KES 1,500 payable when your account is approved. These fees cover the software only and are
+            separate from, and in addition to, Safaricom&apos;s own Paybill, Till, and B2C charges, which you pay to
+            Safaricom directly. Fees are invoiced and paid manually for now; an account with an unpaid balance may be
+            suspended under section 8. We may change our fees on written notice before the change takes effect.
           </P>
         </Section>
 

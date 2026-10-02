@@ -3,6 +3,11 @@ import SectionWrapper from "@/shared/components/shared/SectionWrapper";
 
 const faqs = [
   {
+    question: "How much does ScriptPesa cost?",
+    answer:
+      "A standard KES 2,500 per month, plus a one-time KES 1,500 onboarding fee when your account is approved. That covers collections, payouts, the dashboard and reporting. It's separate from Safaricom's own Paybill, Till and B2C charges, which you pay to Safaricom directly.",
+  },
+  {
     question: "Do I need a Paybill or Till number already?",
     answer:
       "Yes — you'll need your own Safaricom Paybill/Till and M-Pesa API credentials. ScriptPesa doesn't provide these, it works with the ones you already have.",

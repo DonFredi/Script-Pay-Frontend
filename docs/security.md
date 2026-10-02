@@ -1,4 +1,4 @@
-# Security — ScriptPay Frontend
+# Security — ScriptPesa Frontend
 
 This app enforces no authorization itself — every real permission check
 happens in the backend (`Script-Pay-Backend`'s `AccessTokenGuard`/

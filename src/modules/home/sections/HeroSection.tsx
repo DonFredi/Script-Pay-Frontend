@@ -49,9 +49,9 @@ const HeroSection = () => {
             HeroIllustration); the M-Pesa mark is layered over it rather than baked
             in so it stays sharp at every viewport, keeps Safaricom's own brand
             colour, and can be moved or swapped without re-exporting anything. */}
-        <div className="relative w-full md:w-1/2">
+        <div className="relative w-full pb-12 md:w-1/2">
           <HeroIllustration />
-          <div className="absolute bottom-2 left-2 flex items-center gap-2 rounded-rad-lg border bg-card/90 p-2 shadow-lg backdrop-blur-sm sm:bottom-4 sm:left-4 sm:gap-3 sm:p-3">
+          <div className="absolute bottom-0 left-2 flex items-center gap-2 rounded-rad-lg border bg-card/90 p-2 shadow-lg backdrop-blur-sm sm:left-4 sm:gap-3 sm:p-3">
             {/* alt="" — the adjacent label already names the mark, so announcing
                 it again would only repeat itself for a screen reader. */}
             <Image

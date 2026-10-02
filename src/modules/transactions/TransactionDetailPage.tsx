@@ -24,16 +24,14 @@ function formatDate(iso: string) {
 }
 
 /**
- * ScriptPay (product) on the left, ScriptTagg (parent company) on the right.
- * This replaces the website nav (hidden on print via SiteHeader/Sidebar's
- * `print:hidden`) as the heading a printed receipt actually shows. The logos
- * are the official brand files in public/brand/.
+ * The ScriptPesa logo as the receipt's heading. This replaces the website nav
+ * (hidden on print via SiteHeader/Sidebar's `print:hidden`) as the heading a
+ * printed receipt actually shows. Logo file is the official one in public/brand/.
  */
 function ReceiptLetterhead() {
   return (
-    <div className="mb-4 flex items-center justify-between gap-3 border-b pb-3">
-      <Image src="/brand/scriptpay-logo.svg" alt="ScriptPay" width={1185} height={240} className="h-9 w-auto" />
-      <Image src="/brand/scripttagg-logo.png" alt="ScriptTagg" width={1300} height={243} className="h-9 w-auto" />
+    <div className="mb-4 flex items-center border-b pb-3">
+      <Image src="/brand/scriptpesa-logo.svg" alt="ScriptPesa" width={1266} height={240} className="h-9 w-auto" />
     </div>
   );
 }

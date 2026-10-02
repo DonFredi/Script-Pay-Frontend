@@ -3,7 +3,7 @@ name: add-feature-module
 description: Use when adding a new feature area to this Next.js app (a new dashboard section, a new API integration) — covers the modules/<feature> file convention, wiring a new API call through api-client correctly, and registering a new protected route in proxy.ts.
 ---
 
-# Adding a new feature module in ScriptPay Frontend
+# Adding a new feature module in ScriptPesa Frontend
 
 Every feature under `src/modules/` (auth, tenants, payments, transactions,
 api-keys, ...) follows the same internal shape. Follow it rather than

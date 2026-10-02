@@ -1,4 +1,4 @@
-# Architecture — ScriptPay Frontend
+# Architecture — ScriptPesa Frontend
 
 Current-state description of how this Next.js 16 (App Router) app works.
 No aspirational content — everything here is verified against the source in

@@ -9,6 +9,20 @@ export function useTenants() {
   });
 }
 
+/**
+ * Tenants waiting on a SUPER_ADMIN's KYC review. Shares the ["admin","tenants"] cache
+ * with useTenants (the status change invalidates both), but polls so a sign-up that
+ * lands while an admin already has the dashboard open still shows up without a reload.
+ */
+export function usePendingTenants() {
+  return useQuery({
+    queryKey: ["admin", "tenants"],
+    queryFn: listTenants,
+    refetchInterval: 60_000,
+    select: (tenants) => tenants.filter((tenant) => tenant.status === "pending_kyc"),
+  });
+}
+
 export function useTenant(id: string) {
   return useQuery({
     queryKey: ["admin", "tenants", id],

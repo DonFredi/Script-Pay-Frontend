@@ -36,7 +36,7 @@ const features = [
     icon: RefreshCw,
     title: "Payments that reconcile themselves",
     description:
-      "ScriptPay actively checks every transaction against Safaricom's own records and catches drift automatically.",
+      "ScriptPesa actively checks every transaction against Safaricom's own records and catches drift automatically.",
   },
   {
     id: 5,

@@ -8,12 +8,12 @@ import z from "zod";
 // .env.example lists the branding vars below with empty values (documentation,
 // not real values) — Next.js loads an empty-but-present var as "", not
 // undefined, so a plain `.default(...)` wouldn't apply and min(1) would throw.
-// This coerces "" to undefined first so the ScriptPay default actually kicks in
+// This coerces "" to undefined first so the ScriptPesa default actually kicks in
 // for anyone who copies .env.example into .env.local without filling them in.
 const optionalWithDefault = (fallback: string) =>
   z.preprocess((v) => (v === "" ? undefined : v), z.string().min(1).default(fallback));
 
-// Branding vars all default to ScriptPay's own values, so an unset .env behaves
+// Branding vars all default to ScriptPesa's own values, so an unset .env behaves
 // exactly as before — they only need to change for a differently-branded
 // deployment of this same codebase (see docs/decisions.md, entry 8).
 const envSchema = z.object({
@@ -29,13 +29,13 @@ const envSchema = z.object({
   // degradation.
   NEXT_PUBLIC_SENTRY_DSN: z.preprocess((v) => (v === "" ? undefined : v), z.url().optional()),
 
-  NEXT_PUBLIC_SITE_NAME: optionalWithDefault("ScriptPay"),
+  NEXT_PUBLIC_SITE_NAME: optionalWithDefault("ScriptPesa"),
   NEXT_PUBLIC_SITE_DESCRIPTION: optionalWithDefault("Online M-Pesa payments for businesses"),
   NEXT_PUBLIC_CONTACT_PHONE: optionalWithDefault("+254 797 162 262"),
   NEXT_PUBLIC_CONTACT_EMAIL: optionalWithDefault("scripttagg@gmail.com"),
   NEXT_PUBLIC_CONTACT_WHATSAPP: optionalWithDefault("+254 797 162 262"),
   NEXT_PUBLIC_ADDRESS: optionalWithDefault("Obama Estate"),
-  NEXT_PUBLIC_OG_IMAGE: optionalWithDefault("/brand/scriptpay-og.png"),
+  NEXT_PUBLIC_OG_IMAGE: optionalWithDefault("/brand/scriptpesa-og.png"),
   NEXT_PUBLIC_SOCIAL_TWITTER: optionalWithDefault("https://x.com/scripttagg"),
   NEXT_PUBLIC_SOCIAL_INSTAGRAM: optionalWithDefault("https://instagram.com/scripttagg"),
   NEXT_PUBLIC_SOCIAL_PINTEREST: optionalWithDefault("https://pinterest.com/scripttagg"),

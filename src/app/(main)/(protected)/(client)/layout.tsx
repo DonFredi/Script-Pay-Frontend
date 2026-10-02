@@ -7,6 +7,7 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { SiteHeader } from "@/components/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { TENANT_NAV_ITEMS } from "@/config/nav-items";
+import TenantStatusBanner from "@/modules/tenants/components/TenantStatusBanner";
 
 // Auth/role gating for everything under here already happens one level up, in
 // (protected)/layout.tsx (the parent ProtectedLayout) — this layout adds the
@@ -31,7 +32,10 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
       <AppSidebar navItems={TENANT_NAV_ITEMS} userLabel={user?.username ?? user?.email ?? "User"} />
       <SidebarInset>
         <SiteHeader />
-        <main className="@container/main flex-1 p-6 pt-8">{children}</main>
+        <main className="@container/main flex-1 p-6 pt-8">
+          <TenantStatusBanner />
+          {children}
+        </main>
       </SidebarInset>
     </SidebarProvider>
   );

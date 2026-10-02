@@ -1,4 +1,4 @@
-# Testing — ScriptPay Frontend
+# Testing — ScriptPesa Frontend
 
 Current state of the test setup, verified as of 2026-08-25 — not aspirational.
 (The Playwright E2E addition below is dated 2026-09-18; the rest of this file

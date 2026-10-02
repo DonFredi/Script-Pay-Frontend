@@ -14,7 +14,7 @@ const email = siteConfig.contact.email || ""; */
   "@type": "Organization",
   name: siteName,
   url: siteUrl,
-  logo: `${siteUrl}/brand/scriptpay-logo.png`,
+  logo: `${siteUrl}/brand/scriptpesa-logo.png`,
   description:
     "ScriptTag builds custom, scalable websites for businesses across Kenya, helping SMEs grow with fast, reliable, and tailored web solutions.",
   areaServed: {

@@ -5,7 +5,7 @@ const HowItWorks = () => {
     {
       id: 1,
       title: "Send payment request",
-      description: "You send a payment request straight from your ScriptPay dashboard",
+      description: "You send a payment request straight from your ScriptPesa dashboard",
     },
     {
       id: 2,

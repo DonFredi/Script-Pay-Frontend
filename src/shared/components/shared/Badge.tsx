@@ -11,9 +11,9 @@ export default function Badge() {
   return (
     <Link href="/" className="inline-block py-1 px-2 rounded-sm">
       <Image
-        src="/brand/scriptpay-logo.svg"
+        src="/brand/scriptpesa-logo.svg"
         alt={siteConfig.name}
-        width={1185}
+        width={1266}
         height={240}
         priority
         className="h-8 w-auto"

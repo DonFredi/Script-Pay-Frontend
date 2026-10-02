@@ -1,6 +1,6 @@
-# ScriptPay Frontend
+# ScriptPesa Frontend
 
-Next.js 16 (App Router, React 19) merchant/admin dashboard for ScriptPay, a
+Next.js 16 (App Router, React 19) merchant/admin dashboard for ScriptPesa, a
 multi-tenant M-Pesa (Safaricom Daraja) payment platform. Pure API client of
 the `Script-Pay-Backend` NestJS API — it owns no database and never talks to
 Safaricom directly.

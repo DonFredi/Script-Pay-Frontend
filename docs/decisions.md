@@ -1,4 +1,4 @@
-# Architecture Decision Log — ScriptPay Frontend
+# Architecture Decision Log — ScriptPesa Frontend
 
 Each entry: the problem being solved, the choice made, and why the rejected
 alternative(s) didn't fit. Verified against source comments and code as of
@@ -177,7 +177,7 @@ across N forked copies instead of being a config change.
 **Chosen**: `src/config/env/clientEnv.ts` adds `NEXT_PUBLIC_SITE_NAME`,
 `NEXT_PUBLIC_SITE_DESCRIPTION`, `NEXT_PUBLIC_CONTACT_*`, `NEXT_PUBLIC_ADDRESS`,
 `NEXT_PUBLIC_OG_IMAGE`, and `NEXT_PUBLIC_SOCIAL_*`, all optional and each
-defaulting to ScriptPay's real current values — an unset `.env` behaves
+defaulting to ScriptPesa's real current values — an unset `.env` behaves
 identically to before. `clientConfig.branding` (`src/config/client.ts`)
 exposes them, and `site.ts` now derives `siteConfig` entirely from
 `clientConfig.branding` instead of literal strings, including deriving the

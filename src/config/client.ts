@@ -24,7 +24,7 @@ export const clientConfig = {
     // dependent parts (CSRF, silent refresh, proxy) silently break.
     apiUrl: typeof window !== "undefined" ? "/api/backend" : clientEnv.NEXT_PUBLIC_API_URL,
   },
-  // Every field here defaults to ScriptPay's own values (see clientEnv.ts) — a
+  // Every field here defaults to ScriptPesa's own values (see clientEnv.ts) — a
   // relabeled deployment of this codebase overrides these via env vars instead
   // of editing site.ts. See docs/decisions.md, entry 8.
   branding: {

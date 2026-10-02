@@ -8,6 +8,7 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { SiteHeader } from "@/components/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { ADMIN_NAV_ITEMS } from "@/config/nav-items";
+import PendingTenantsBanner from "@/modules/admin/components/PendingTenantsBanner";
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const { isAuthenticated, isInitialized, user } = useAuth();
@@ -30,7 +31,10 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       <AppSidebar navItems={ADMIN_NAV_ITEMS} userLabel={user?.username ?? user?.email ?? "Admin"} />
       <SidebarInset>
         <SiteHeader />
-        <main className="@container/main flex-1 p-6 pt-8">{children}</main>
+        <main className="@container/main flex-1 p-6 pt-8">
+          <PendingTenantsBanner />
+          {children}
+        </main>
       </SidebarInset>
     </SidebarProvider>
   );

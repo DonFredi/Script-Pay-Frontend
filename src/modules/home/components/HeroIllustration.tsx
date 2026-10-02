@@ -29,9 +29,9 @@ export default function HeroIllustration() {
       style={{ transform: "perspective(1800px) rotateX(10deg) rotateY(-14deg) rotateZ(2deg)" }}
     >
       <svg
-        viewBox="0 0 580 430"
+        viewBox="0 0 550 356"
         role="img"
-        aria-label="ScriptPay dashboard preview"
+        aria-label="ScriptPesa dashboard preview"
         className="h-auto w-full overflow-visible"
         style={{ fontFamily: "var(--font-primary), system-ui, sans-serif" }}
       >
@@ -47,9 +47,6 @@ export default function HeroIllustration() {
           <filter id="hero-shadow" x="-20%" y="-20%" width="140%" height="150%">
             <feDropShadow dx="0" dy="14" stdDeviation="16" floodColor="var(--primary)" floodOpacity="0.22" />
           </filter>
-          <filter id="hero-tile-shadow" x="-30%" y="-30%" width="160%" height="170%">
-            <feDropShadow dx="0" dy="18" stdDeviation="16" floodColor="var(--primary)" floodOpacity="0.4" />
-          </filter>
         </defs>
 
         {/* dashboard window */}
@@ -58,7 +55,7 @@ export default function HeroIllustration() {
         </g>
 
         {/* header: brand mark + skeleton title + controls */}
-        <image href="/brand/scriptpay-mark.svg" x="62" y="46" width="35" height="30.6" />
+        <image href="/brand/scriptpesa-mark.svg" x="62" y="46" width="35" height="30.6" />
         <rect x="110" y="52" width="150" height="9" rx="4.5" className="fill-primary/20" />
         <rect x="110" y="67" width="90" height="7" rx="3.5" className="fill-primary/10" />
         <rect x="384" y="52" width="50" height="20" rx="10" className="fill-muted" />
@@ -105,12 +102,6 @@ export default function HeroIllustration() {
             {label}
           </text>
         ))}
-
-        {/* brand tile: white backing so the mark's S cutout reads as a white S */}
-        <g filter="url(#hero-tile-shadow)">
-          <rect x="346" y="246" width="190" height="166" rx="26" className="fill-white" />
-          <image href="/brand/scriptpay-mark.svg" x="346" y="246" width="190" height="166" />
-        </g>
       </svg>
     </div>
   );

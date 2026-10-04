@@ -29,3 +29,27 @@ export const createShortcodeSchema = shortcodeBaseSchema.refine(
 );
 
 export type CreateShortcodeFormData = z.infer<typeof createShortcodeSchema>;
+
+// Editing an existing shortcode replaces its credentials; the type is fixed (it
+// comes from the row, not the form) and isDefault has its own "Make default"
+// action. Stored credentials are never sent back to the browser, so there is
+// nothing to prefill — every field starts empty and must be filled.
+export const editShortcodeSchema = z
+  .object({
+    type: z.enum(SHORTCODE_TYPES),
+    passkey: z.string().trim().optional(),
+    initiatorName: z.string().trim().optional(),
+    securityCredential: z.string().trim().optional(),
+  })
+  .superRefine((v, ctx) => {
+    if (v.type === "B2C") {
+      if (!v.initiatorName) ctx.addIssue({ code: "custom", path: ["initiatorName"], message: "Initiator name is required" });
+      if (!v.securityCredential) {
+        ctx.addIssue({ code: "custom", path: ["securityCredential"], message: "Security credential is required" });
+      }
+    } else if (!v.passkey) {
+      ctx.addIssue({ code: "custom", path: ["passkey"], message: "Passkey is required" });
+    }
+  });
+
+export type EditShortcodeFormData = z.infer<typeof editShortcodeSchema>;

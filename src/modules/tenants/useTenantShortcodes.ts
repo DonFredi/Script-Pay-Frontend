@@ -73,6 +73,18 @@ export function useSetDefaultShortcode(tenantId?: string) {
   });
 }
 
+export function useUpdateShortcode(tenantId?: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<CreateShortcodeInput> }) => updateShortcode(id, data, tenantId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKey(tenantId) });
+      toast.success("Shortcode updated");
+    },
+    onError: (error) => toast.error(getErrorMessage(error)),
+  });
+}
+
 export function useRemoveShortcode(tenantId?: string) {
   const queryClient = useQueryClient();
   return useMutation({

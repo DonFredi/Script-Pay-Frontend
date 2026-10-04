@@ -13,8 +13,22 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
 import { mpesaCredentialsSchema, type MpesaCredentialsFormData } from "../mpesa-credentials.schema";
 import { useSetMpesaCredentials } from "../useMpesaCredentials";
-import { createShortcodeSchema, SHORTCODE_TYPES, type CreateShortcodeFormData, type ShortcodeType } from "../tenant-shortcodes.schema";
-import { useCreateShortcode, useRemoveShortcode, useSetDefaultShortcode, useTenantShortcodes } from "../useTenantShortcodes";
+import {
+  createShortcodeSchema,
+  editShortcodeSchema,
+  SHORTCODE_TYPES,
+  type CreateShortcodeFormData,
+  type EditShortcodeFormData,
+  type ShortcodeType,
+} from "../tenant-shortcodes.schema";
+import type { ShortcodeSummary } from "../tenant-shortcodes.api";
+import {
+  useCreateShortcode,
+  useRemoveShortcode,
+  useSetDefaultShortcode,
+  useTenantShortcodes,
+  useUpdateShortcode,
+} from "../useTenantShortcodes";
 
 /**
  * Lets a tenant configure their OWN Daraja setup — required before any payment
@@ -101,6 +115,7 @@ const SHORTCODE_TYPE_LABELS: Record<ShortcodeType, string> = {
 
 function ShortcodesSection() {
   const [showAddForm, setShowAddForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const { data: shortcodes, isLoading } = useTenantShortcodes();
   const { mutateAsync: removeShortcode, isPending: isRemoving } = useRemoveShortcode();
   const { mutate: setDefaultShortcode, isPending: isSettingDefault, variables: settingDefaultId } =
@@ -127,44 +142,52 @@ function ShortcodesSection() {
       {shortcodes && shortcodes.length > 0 && (
         <ul className="mt-4 divide-y rounded-lg border">
           {shortcodes.map((sc) => (
-            <li key={sc.id} className="flex items-center justify-between gap-4 p-3">
-              <div>
-                <p className="text-sm font-medium">
-                  {sc.shortcode} <span className="text-muted-foreground">— {SHORTCODE_TYPE_LABELS[sc.type]}</span>
-                  {sc.isDefault && <span className="ml-2 text-xs text-muted-foreground">(default)</span>}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {sc.type === "B2C"
-                    ? sc.payoutConfigured
-                      ? "Payout credentials configured"
-                      : "Payout credentials not yet configured"
-                    : sc.stkConfigured
-                      ? "STK credentials configured"
-                      : "STK credentials not yet configured"}
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                {!sc.isDefault && (
+            <li key={sc.id} className="p-3">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-sm font-medium">
+                    {sc.shortcode} <span className="text-muted-foreground">— {SHORTCODE_TYPE_LABELS[sc.type]}</span>
+                    {sc.isDefault && <span className="ml-2 text-xs text-muted-foreground">(default)</span>}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {sc.type === "B2C"
+                      ? sc.payoutConfigured
+                        ? "Payout credentials configured"
+                        : "Payout credentials not yet configured"
+                      : sc.stkConfigured
+                        ? "STK credentials configured"
+                        : "STK credentials not yet configured"}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  {!sc.isDefault && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={isSettingDefault}
+                      onClick={() => setDefaultShortcode(sc.id)}
+                    >
+                      {isSettingDefault && settingDefaultId === sc.id ? "Setting…" : "Make default"}
+                    </Button>
+                  )}
+                  {editingId !== sc.id && (
+                    <Button type="button" variant="outline" size="sm" onClick={() => setEditingId(sc.id)}>
+                      Edit
+                    </Button>
+                  )}
                   <Button
                     type="button"
-                    variant="outline"
+                    variant="ghost"
                     size="sm"
-                    disabled={isSettingDefault}
-                    onClick={() => setDefaultShortcode(sc.id)}
+                    disabled={isRemoving}
+                    onClick={() => removeShortcode(sc.id)}
                   >
-                    {isSettingDefault && settingDefaultId === sc.id ? "Setting…" : "Make default"}
+                    Remove
                   </Button>
-                )}
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  disabled={isRemoving}
-                  onClick={() => removeShortcode(sc.id)}
-                >
-                  Remove
-                </Button>
+                </div>
               </div>
+              {editingId === sc.id && <EditShortcodeForm shortcode={sc} onDone={() => setEditingId(null)} />}
             </li>
           ))}
         </ul>
@@ -290,6 +313,80 @@ function AddShortcodeForm({ onDone }: { onDone: () => void }) {
           <div className="flex gap-2">
             <Button type="submit" disabled={isPending}>
               {isPending ? "Adding…" : "Add shortcode"}
+            </Button>
+            <Button type="button" variant="ghost" onClick={onDone}>
+              Cancel
+            </Button>
+          </div>
+        </FieldGroup>
+      </FieldSet>
+    </form>
+  );
+}
+
+/**
+ * Replaces an existing shortcode's credentials in place — e.g. a regenerated B2C
+ * security credential after Safaricom resets the initiator password. The backend
+ * never returns stored credentials, so nothing is prefilled; the type is fixed
+ * by the row, so only that type's fields are shown and sent.
+ */
+function EditShortcodeForm({ shortcode, onDone }: { shortcode: ShortcodeSummary; onDone: () => void }) {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<EditShortcodeFormData>({
+    resolver: zodResolver(editShortcodeSchema),
+    defaultValues: { type: shortcode.type, passkey: "", initiatorName: "", securityCredential: "" },
+  });
+  const { mutateAsync, isPending } = useUpdateShortcode();
+  const isB2c = shortcode.type === "B2C";
+
+  const onSubmit = async (data: EditShortcodeFormData) => {
+    await mutateAsync({
+      id: shortcode.id,
+      data: isB2c
+        ? { initiatorName: data.initiatorName, securityCredential: data.securityCredential }
+        : { passkey: data.passkey },
+    });
+    onDone();
+  };
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className="mt-3 rounded-lg border p-4">
+      <FieldSet>
+        <FieldGroup className="gap-3">
+          <P className="text-xs text-muted-foreground">
+            Replaces the saved credentials for {shortcode.shortcode}. Saved values are never shown, so enter the full
+            new {isB2c ? "values" : "value"}.
+          </P>
+          {isB2c ? (
+            <>
+              <Field>
+                <FieldLabel htmlFor={`edit-${shortcode.id}-initiatorName`}>Initiator Name</FieldLabel>
+                <Input id={`edit-${shortcode.id}-initiatorName`} {...register("initiatorName")} />
+                {errors.initiatorName && <FieldError>{errors.initiatorName.message}</FieldError>}
+              </Field>
+              <Field>
+                <FieldLabel htmlFor={`edit-${shortcode.id}-securityCredential`}>Security Credential</FieldLabel>
+                <PasswordInput
+                  id={`edit-${shortcode.id}-securityCredential`}
+                  autoComplete="new-password"
+                  {...register("securityCredential")}
+                />
+                {errors.securityCredential && <FieldError>{errors.securityCredential.message}</FieldError>}
+              </Field>
+            </>
+          ) : (
+            <Field>
+              <FieldLabel htmlFor={`edit-${shortcode.id}-passkey`}>Passkey</FieldLabel>
+              <PasswordInput id={`edit-${shortcode.id}-passkey`} autoComplete="new-password" {...register("passkey")} />
+              {errors.passkey && <FieldError>{errors.passkey.message}</FieldError>}
+            </Field>
+          )}
+          <div className="flex gap-2">
+            <Button type="submit" disabled={isPending}>
+              {isPending ? "Saving…" : "Save"}
             </Button>
             <Button type="button" variant="ghost" onClick={onDone}>
               Cancel

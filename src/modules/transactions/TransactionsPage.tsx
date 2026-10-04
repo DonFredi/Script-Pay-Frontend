@@ -72,7 +72,11 @@ const TransactionsPage = () => {
         </div>
       </SectionWrapper>
 
-      {error && <p className="text-sm text-destructive px-6">Could not load transactions: {error}</p>}
+      {error && (
+        <SectionWrapper className="py-0">
+          <p className="text-sm text-destructive">Could not load transactions: {error}</p>
+        </SectionWrapper>
+      )}
       <TransactionsTable transactions={transactions} loading={loading} />
     </PageWrapper>
   );

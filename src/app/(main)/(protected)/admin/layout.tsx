@@ -2,6 +2,7 @@
 import { requireRoles } from "@/modules/auth/shared/guards/require-roles";
 import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
 import FullScreenLoader from "@/shared/components/layout/FullScreenLoader";
+import SectionWrapper from "@/shared/components/shared/SectionWrapper";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import { AppSidebar } from "@/components/app-sidebar";
@@ -31,8 +32,10 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       <AppSidebar navItems={ADMIN_NAV_ITEMS} userLabel={user?.username ?? user?.email ?? "Admin"} />
       <SidebarInset>
         <SiteHeader />
-        <main className="@container/main flex-1 p-6 pt-8">
-          <PendingTenantsBanner />
+        <main className="@container/main flex-1 pt-8 pb-6">
+          <SectionWrapper className="py-0">
+            <PendingTenantsBanner />
+          </SectionWrapper>
           {children}
         </main>
       </SidebarInset>

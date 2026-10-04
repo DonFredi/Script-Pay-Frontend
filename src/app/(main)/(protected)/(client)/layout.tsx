@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
 import FullScreenLoader from "@/shared/components/layout/FullScreenLoader";
+import SectionWrapper from "@/shared/components/shared/SectionWrapper";
 import { AppSidebar } from "@/components/app-sidebar";
 import { SiteHeader } from "@/components/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
@@ -32,8 +33,10 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
       <AppSidebar navItems={TENANT_NAV_ITEMS} userLabel={user?.username ?? user?.email ?? "User"} />
       <SidebarInset>
         <SiteHeader />
-        <main className="@container/main flex-1 p-6 pt-8">
-          <TenantStatusBanner />
+        <main className="@container/main flex-1 pt-8 pb-6">
+          <SectionWrapper className="py-0">
+            <TenantStatusBanner />
+          </SectionWrapper>
           {children}
         </main>
       </SidebarInset>

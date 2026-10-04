@@ -29,7 +29,7 @@ export function SiteHeader() {
 
   return (
     <header className="flex shrink-0 items-center gap-2 py-3 print:hidden">
-      <div className="flex w-full items-center gap-1 px-4 lg:gap-2 lg:px-6">
+      <div className="flex w-full items-center gap-1 px-4 md:px-6 lg:gap-2">
         {/* Hidden at lg+ — the sidebar is pinned open on large screens and isn't
             toggleable there; the trigger only makes sense on tablet/mobile. */}
         <SidebarTrigger className="-ml-1 lg:hidden" />

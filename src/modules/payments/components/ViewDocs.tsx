@@ -7,15 +7,17 @@ import { siteConfig } from "@/config/site";
 // instead of a dead route.
 const ViewDocs = () => {
   return (
-    <SectionWrapper className="shadow-lg flex flex-row justify-between px-6 py-10 mt-18">
-      <div>
-        <h4>Need Help?</h4>
-        <p>Talk to us and we&apos;ll walk you through it</p>
-      </div>
+    <SectionWrapper className="mt-18">
+      <div className="flex flex-row justify-between rounded-lg px-6 py-10 shadow-lg">
+        <div>
+          <h4>Need Help?</h4>
+          <p>Talk to us and we&apos;ll walk you through it</p>
+        </div>
 
-      <Button asChild>
-        <a href={siteConfig.contact.phone.link}>Call Us</a>
-      </Button>
+        <Button asChild>
+          <a href={siteConfig.contact.phone.link}>Call Us</a>
+        </Button>
+      </div>
     </SectionWrapper>
   );
 };

@@ -193,13 +193,17 @@ function AddShortcodeForm({ onDone }: { onDone: () => void }) {
 
   const [isDefault, setIsDefault] = useState(false);
 
+  // Only send the credential fields that belong to the chosen type. react-hook-form
+  // keeps an unmounted field's value, so a passkey entered (or browser-autofilled)
+  // before switching to B2C would otherwise still be submitted and fail validation.
   const onSubmit = async (data: CreateShortcodeFormData) => {
+    const isB2c = data.type === "B2C";
     await mutateAsync({
       ...data,
       isDefault,
-      passkey: data.passkey || undefined,
-      initiatorName: data.initiatorName || undefined,
-      securityCredential: data.securityCredential || undefined,
+      passkey: isB2c ? undefined : data.passkey || undefined,
+      initiatorName: isB2c ? data.initiatorName || undefined : undefined,
+      securityCredential: isB2c ? data.securityCredential || undefined : undefined,
     });
     onDone();
   };
@@ -213,8 +217,17 @@ function AddShortcodeForm({ onDone }: { onDone: () => void }) {
             <Select
               value={type}
               onValueChange={(v) => {
-                setType(v as ShortcodeType);
-                setValue("type", v as ShortcodeType, { shouldValidate: true });
+                const next = v as ShortcodeType;
+                setType(next);
+                // Clear the hidden type's fields first, so validation runs against
+                // only what's visible on screen.
+                if (next === "B2C") {
+                  setValue("passkey", "");
+                } else {
+                  setValue("initiatorName", "");
+                  setValue("securityCredential", "");
+                }
+                setValue("type", next, { shouldValidate: true });
               }}
             >
               <SelectTrigger id="shortcode-type" className="w-full">
@@ -245,7 +258,11 @@ function AddShortcodeForm({ onDone }: { onDone: () => void }) {
               </Field>
               <Field>
                 <FieldLabel htmlFor="shortcode-securityCredential">Security Credential</FieldLabel>
-                <PasswordInput id="shortcode-securityCredential" {...register("securityCredential")} />
+                <PasswordInput
+                  id="shortcode-securityCredential"
+                  autoComplete="new-password"
+                  {...register("securityCredential")}
+                />
               </Field>
               <P className="text-xs text-muted-foreground">
                 The value Safaricom&apos;s portal gives you — your initiator password already encrypted against
@@ -255,7 +272,7 @@ function AddShortcodeForm({ onDone }: { onDone: () => void }) {
           ) : (
             <Field>
               <FieldLabel htmlFor="shortcode-passkey">Passkey</FieldLabel>
-              <PasswordInput id="shortcode-passkey" {...register("passkey")} />
+              <PasswordInput id="shortcode-passkey" autoComplete="new-password" {...register("passkey")} />
             </Field>
           )}
 
